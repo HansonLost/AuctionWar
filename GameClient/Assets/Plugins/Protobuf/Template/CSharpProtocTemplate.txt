@@ -1,0 +1,13 @@
+using System;
+using HamPig.Network;
+
+namespace AuctionWar
+{
+	public enum ProtocType
+	{
+		#TypeBlock#
+	}
+
+	#ListenerBlock#
+}
+

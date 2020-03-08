@@ -1,0 +1,6 @@
+syntax = "proto3";
+package AuctionWar;
+
+message LoginRes {
+	bool isMatch = 1;
+}
