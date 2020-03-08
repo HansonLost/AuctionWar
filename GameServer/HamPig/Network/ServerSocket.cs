@@ -40,7 +40,6 @@ namespace HamPig.Network
 
         public void Bind(String ip, Int32 port)
         {
-            Console.WriteLine("Server running...");
             IPAddress addr = IPAddress.Parse(ip);
             IPEndPoint ipEp = new IPEndPoint(addr, port);
             m_Listenfd.Bind(ipEp);
