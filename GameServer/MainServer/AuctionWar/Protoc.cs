@@ -5,6 +5,7 @@ namespace AuctionWar
 	public enum ProtocType
 	{
 		CombatMatch,
+		CombatMatchRes,
 		Login,
 		LoginRes,
 	}
@@ -12,6 +13,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.CombatMatch;
 		protected override CombatMatch ParseData(byte[] data, int offset, int size) => CombatMatch.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class CombatMatchResListener : ServerNetManager.BaseListener<CombatMatchResListener, CombatMatchRes>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.CombatMatchRes;
+		protected override CombatMatchRes ParseData(byte[] data, int offset, int size) => CombatMatchRes.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class LoginListener : ServerNetManager.BaseListener<LoginListener, Login>
 	{

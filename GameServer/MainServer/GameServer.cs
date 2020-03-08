@@ -49,7 +49,11 @@ namespace MainServer
         {
             CombatMatchListener.instance.AddListener(delegate (Socket cfd, CombatMatch combatMatch)
             {
-                Console.WriteLine("玩家请求匹配");
+                var res = new CombatMatchRes
+                {
+                    RoomId = 1,
+                };
+                ServerNetManager.Send(cfd, (Int16)ProtocType.CombatMatchRes, res);
             });
         }
     }
