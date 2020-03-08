@@ -12,12 +12,13 @@ namespace MainServer
 
         public void Start()
         {
-
+            isShutdown = false;
         }
 
         public void Update()
         {
-
+            Console.ReadKey();
+            isShutdown = true;
         }
 
         public void Shutdown()
