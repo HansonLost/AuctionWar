@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HamPig.Network;
 using HamPig;
 using AuctionWar;
+using System.Net.Sockets;
 
 namespace MainServer
 {
@@ -46,7 +47,7 @@ namespace MainServer
 
         private void ListenProtoc()
         {
-            CombatMatchListener.instance.AddListener(delegate (CombatMatch combatMatch)
+            CombatMatchListener.instance.AddListener(delegate (Socket cfd, CombatMatch combatMatch)
             {
                 Console.WriteLine("玩家请求匹配");
             });

@@ -57,7 +57,7 @@ setlocal enabledelayedexpansion
 	) else if "!line!" NEQ "!line:#ListenerBlock#=!" (
 		for %%j in (%SRC%\*.proto) do (
 			set name=%%~nj
-			echo 	public sealed class !name!Listener : NetManager.BaseListener^<!name!Listener, !name!^>
+			echo 	public sealed class !name!Listener : ServerNetManager.BaseListener^<!name!Listener, !name!^>
 			echo 	{
 			echo 		public override short GetProtocType(^) =^> (Int16^)ProtocType.!name!;
 			echo 		protected override !name! ParseData(byte[] data, int offset, int size^) =^> !name!.Parser.ParseFrom(data, offset, size^);

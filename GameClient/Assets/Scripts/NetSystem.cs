@@ -11,7 +11,8 @@ public class NetSystem : MonoBehaviour
     {
         NetManager.Connect("127.0.0.1", 8888);
         var combatMatch = new AuctionWar.CombatMatch { };
-        NetManager.Send((Int16)ProtocType.CombatMatch, combatMatch);
+        var id = (Int16)AuctionWar.ProtocType.CombatMatch;
+        NetManager.Send(id, combatMatch);
     }
 
     // Update is called once per frame
