@@ -31,6 +31,10 @@ namespace HamPig.Network
             {
                 m_Action += action;
             }
+            public void RemoveListener(Action<P> action)
+            {
+                m_Action -= action;
+            }
             public void Invoke(byte[] data, int offset, int size)
             {
                 m_Action.Invoke(ParseData(data, offset, size));
