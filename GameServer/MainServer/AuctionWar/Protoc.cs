@@ -6,6 +6,7 @@ namespace AuctionWar
 	{
 		CombatMatch,
 		CombatMatchRes,
+		Heartbeat,
 		Login,
 		LoginRes,
 	}
@@ -18,6 +19,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.CombatMatchRes;
 		protected override CombatMatchRes ParseData(byte[] data, int offset, int size) => CombatMatchRes.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class HeartbeatListener : ServerNetManager.BaseListener<HeartbeatListener, Heartbeat>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.Heartbeat;
+		protected override Heartbeat ParseData(byte[] data, int offset, int size) => Heartbeat.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class LoginListener : ServerNetManager.BaseListener<LoginListener, Login>
 	{

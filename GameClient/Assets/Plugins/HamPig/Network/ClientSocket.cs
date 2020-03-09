@@ -24,8 +24,10 @@ namespace HamPig.Network
 
     public sealed class ClientSocket
     {
-        public Listener<byte[]> onReceive { get; private set; }
+        public Listener<bool> onConnect { get; private set; }
+        private ConnectEvent m_ConnectEvent;
 
+        public Listener<byte[]> onReceive { get; private set; }
         private SocketReadBuffer m_ReadBuffer;
         private SocketWriteBuffer m_WriteBuffer;
         private Socket m_Socket;
@@ -35,6 +37,7 @@ namespace HamPig.Network
         {
             m_ReadBuffer = new SocketReadBuffer();
             m_WriteBuffer = new SocketWriteBuffer();
+            onConnect = new Listener<bool>();
             onReceive = new Listener<byte[]>();
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             {
@@ -52,6 +55,15 @@ namespace HamPig.Network
 
         public void Tick()
         {
+            // 连接事件
+            if(m_ConnectEvent != null)
+            {
+                var isSucceed = m_ConnectEvent.isSucceed;
+                onConnect.Invoke(isSucceed);
+                m_ConnectEvent = null;
+            }
+
+            // 接收事件
             ByteArray data = m_ReadBuffer.GetData();
             while(data != null)
             {
@@ -76,7 +88,6 @@ namespace HamPig.Network
             {
                 m_Socket.BeginDisconnect(false, DisconnectCallback, m_Socket);
             }
-            Console.WriteLine("wait for close");
         }
 
         private void ConnectCallback(IAsyncResult ar)
@@ -85,12 +96,21 @@ namespace HamPig.Network
             {
                 Socket socket = (Socket)ar.AsyncState;
                 socket.EndConnect(ar);
-                Console.WriteLine("connect successfully.");
                 socket.BeginReceive(m_ReadBuffer.recvBuffer, ReceiveCallback, socket);
+
+                m_ConnectEvent = new ConnectEvent
+                {
+                    isSucceed = true,
+                    ex = null,
+                };
             }
             catch (SocketException ex)
             {
-                Console.WriteLine(ex.ToString());
+                m_ConnectEvent = new ConnectEvent
+                {
+                    isSucceed = false,
+                    ex = ex.ToString(),
+                };
             }
         }
 
@@ -106,7 +126,7 @@ namespace HamPig.Network
             }
             catch (SocketException ex)
             {
-                Console.WriteLine(ex.ToString());
+                //Console.WriteLine(ex.ToString());
             }
         }
 
@@ -124,12 +144,11 @@ namespace HamPig.Network
                 else if (m_IsClosing)
                 {
                     socket.BeginDisconnect(false, DisconnectCallback, socket);
-                    Console.WriteLine("begin close.");
                 }
             }
             catch (SocketException ex)
             {
-                Console.WriteLine(ex.ToString());
+                //Console.WriteLine(ex.ToString());
             }
         }
 
@@ -138,6 +157,12 @@ namespace HamPig.Network
             Socket socket = (Socket)ar.AsyncState;
             socket.Close();
             m_IsClosing = false;
+        }
+
+        public class ConnectEvent
+        {
+            public bool isSucceed;
+            public string ex;
         }
     }
 }
