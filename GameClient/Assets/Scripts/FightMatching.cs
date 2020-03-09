@@ -20,10 +20,18 @@ public class FightMatching : MonoBehaviour
         m_BtnMatch.onClick.AddListener(this.CombatMatching);
     }
 
+    Action action;
     // Start is called before the first frame update
     void Start()
     {
         m_TxtLog.text = "请点击匹配";
+    }
+
+    private void Update()
+    {
+        HamPig.Timer.Update();
+        var time = String.Format("当前时间 {0:F6}", HamPig.Timer.time);
+        m_TxtLog.text = time;
     }
 
     private void OnDestroy()

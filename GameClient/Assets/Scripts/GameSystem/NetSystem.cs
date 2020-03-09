@@ -56,6 +56,7 @@ public class NetSystem : MonoBehaviour
             Debug.Log(String.Format("连接{0}", isSucceed));
             if (isSucceed)
             {
+                Debug.Log("成功连接服务器");
                 this.ResetHeartBeat();
             }
         };
@@ -71,13 +72,19 @@ public class NetSystem : MonoBehaviour
     private void ResetHeartBeat()   // 连接成功后调用
     {
         HeartbeatListener.instance.AddListener(this.HeartbeatRefresh);
+        HamPig.Timer.CallInterval(GameConst.INTERVAL_HEART_BEAT, this.SendHeartBeat);
 
         m_SendBeat = Time.time;
     }
 
-    private void UpdateHeartBeat()  // 连接状态才进行倒计时
+    private void UpdateHeartBeat()
     {
+        NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
+    }
 
+    private void SendHeartBeat()
+    {
+        NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
     }
 
     private void HeartbeatRefresh(Heartbeat heartbeat)  // 协议驱动刷新心跳

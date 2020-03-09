@@ -31,6 +31,7 @@ namespace MainServer
             string cmd = m_Console.TryReadLine();
             ParseCommand(cmd);
             ServerNetManager.Update();
+            Timer.Update();
         }
 
         public void Shutdown()
