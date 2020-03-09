@@ -11,6 +11,7 @@ namespace HamPig.Network
     public class NetManager
     {
         public static Action<bool> onConnect;
+        public static Action onForceClose;
 
         private static Dictionary<Int16, IProtocListener> m_ProtocMap = new Dictionary<Int16, IProtocListener>();
 
@@ -30,6 +31,10 @@ namespace HamPig.Network
             m_ClientSocket.onConnect.AddListener(delegate (bool isSucceed)
             {
                 onConnect.Invoke(isSucceed);
+            });
+            m_ClientSocket.onForceClose.AddListener(delegate ()
+            {
+                onForceClose.Invoke();
             });
             m_ClientSocket.Connect("127.0.0.1", 8888);
         }

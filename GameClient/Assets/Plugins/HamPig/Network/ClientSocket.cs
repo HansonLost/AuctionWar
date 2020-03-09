@@ -30,6 +30,10 @@ namespace HamPig.Network
         public Listener<byte[]> onReceive { get; private set; }
         private SocketReadBuffer m_ReadBuffer;
         private SocketWriteBuffer m_WriteBuffer;
+
+        public Listener onForceClose { get; private set; }
+        private ForceCloseEvent m_ForceCloseEvent;
+
         private Socket m_Socket;
         private bool m_IsClosing;
 
@@ -39,6 +43,7 @@ namespace HamPig.Network
             m_WriteBuffer = new SocketWriteBuffer();
             onConnect = new Listener<bool>();
             onReceive = new Listener<byte[]>();
+            onForceClose = new Listener();
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
             {
                 // 2个 bufferSize 都用默认的
@@ -70,10 +75,19 @@ namespace HamPig.Network
                 onReceive.Invoke(data.ToBytes());
                 data = m_ReadBuffer.GetData();
             }
+
+            // 远程强制关闭事件
+            if(m_ForceCloseEvent != null)
+            {
+                onForceClose.Invoke();
+                m_ForceCloseEvent = null;
+            }
         }
 
         public void Send(byte[] data)
         {
+            if (!m_Socket.Connected) return;
+
             ByteArray sendBytes = m_WriteBuffer.Add(data);
             if(sendBytes != null)
             {
@@ -124,9 +138,9 @@ namespace HamPig.Network
                 m_ReadBuffer.Update(count);
                 socket.BeginReceive(m_ReadBuffer.recvBuffer, ReceiveCallback, socket);
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
-                //Console.WriteLine(ex.ToString());
+                m_ForceCloseEvent = new ForceCloseEvent();
             }
         }
 
@@ -146,8 +160,9 @@ namespace HamPig.Network
                     socket.BeginDisconnect(false, DisconnectCallback, socket);
                 }
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
+                UnityEngine.Debug.Log("11111");
                 //Console.WriteLine(ex.ToString());
             }
         }
@@ -164,5 +179,7 @@ namespace HamPig.Network
             public bool isSucceed;
             public string ex;
         }
+
+        public class ForceCloseEvent { }
     }
 }

@@ -9,7 +9,7 @@ using AuctionWar;
 public class NetSystem : MonoBehaviour
 {
     public static NetSystem instance { get; private set; }
-    public bool isConnnect { get; private set; }
+    public bool isConnnected { get; private set; }
 
     private float m_SendBeat;   // 上一次发送 beat 的时间
     private float m_ReceiveBeat;   // 上一次接收 beat 的时间
@@ -34,7 +34,7 @@ public class NetSystem : MonoBehaviour
     {
         NetManager.Update();
 
-        if (this.isConnnect)
+        if (this.isConnnected)
         {
             this.UpdateHeartBeat();
         }
@@ -42,19 +42,27 @@ public class NetSystem : MonoBehaviour
 
     private void OnDestroy()
     {
-           
+        if (this.isConnnected)
+        {
+            NetManager.Close();
+        }
     }
 
     private void ConnectServer()
     {
         NetManager.onConnect += delegate (bool isSucceed)
         {
-            isConnnect = isSucceed;
+            isConnnected = isSucceed;
             Debug.Log(String.Format("连接{0}", isSucceed));
             if (isSucceed)
             {
                 this.ResetHeartBeat();
             }
+        };
+        NetManager.onForceClose += delegate ()
+        {
+            this.isConnnected = false;
+            Debug.Log("远程强制关闭连接");
         };
 
         NetManager.Connect("127.0.0.1", 8888);
