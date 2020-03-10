@@ -12,6 +12,8 @@ namespace MainServer
 {
     public class GameServer
     {
+        public const Int32 MAX_CLIENT_COUNT = 100;
+
         private ConsoleAsync m_Console = new ConsoleAsync();
         private Dictionary<Socket, Client> m_Clients = new Dictionary<Socket, Client>();
         private CombatRoomSystem m_SysCombatRoom = new CombatRoomSystem();
@@ -24,7 +26,6 @@ namespace MainServer
             this.AwakeServer();
             this.ListenProtoc();
         }
-
         public void Update()
         {
             string cmd = m_Console.TryReadLine();
@@ -32,8 +33,8 @@ namespace MainServer
             ServerNetManager.Update();
             Timer.Update();
             this.RemoveDeadClient();
+            this.m_SysCombatRoom.Update();
         }
-
         public void Shutdown()
         {
 
@@ -47,7 +48,46 @@ namespace MainServer
                 isShutdown = true;
             }
         }
+        private void AwakeServer()
+        {
+            ServerNetManager.Bind("127.0.0.1", 8888);
+        }
+        private void ListenProtoc()
+        {
+            CombatMatchListener.instance.AddListener(this.CombatMatch);
+            HeartbeatListener.instance.AddListener(this.AnswerHeartBeat);
+            CancelCombatMatchListener.instance.AddListener(this.CancelCombatMatch);
 
+            ServerNetManager.onAccept += delegate (Socket cfd)
+            {
+                if (m_Clients.ContainsKey(cfd))
+                {
+                    Console.WriteLine("client has been in online list.");
+                    return;
+                }
+                if (m_Clients.Count >= GameServer.MAX_CLIENT_COUNT)
+                {
+                    Console.WriteLine("Server has been full.");
+                    ServerNetManager.Send(cfd, (Int16)ProtocType.ServerOverload, new ServerOverload { });
+                    return;
+                }
+                Console.WriteLine("One client connect to server.");
+                m_Clients.Add(cfd, new Client { cfd = cfd, lastBeat = Timer.time });
+            };
+            ServerNetManager.onClose += delegate (Socket cfd)
+            {
+                Console.WriteLine("One client closing.");
+                m_Clients.Remove(cfd);
+            };
+        }
+        private void AnswerHeartBeat(Socket cfd, Heartbeat heartbeat)
+        {
+            ServerNetManager.Send(cfd, (Int16)ProtocType.Heartbeat, new Heartbeat());
+            if (m_Clients.ContainsKey(cfd))
+            {
+                m_Clients[cfd].lastBeat = Timer.time;
+            }
+        }
         private void RemoveDeadClient()
         {
             List<Socket> listRemove = new List<Socket>();
@@ -55,7 +95,7 @@ namespace MainServer
             {
                 // TODO 暂时写死 8 秒为死亡秒数
                 var client = item.Value;
-                if(Timer.time - client.lastBeat >= 8.0f)
+                if (Timer.time - client.lastBeat >= 8.0f)
                 {
                     listRemove.Add(item.Key);
                 }
@@ -66,40 +106,17 @@ namespace MainServer
                 Console.WriteLine("one client has dead by heart beat.");
             }
         }
-
-        private void AwakeServer()
-        {
-            ServerNetManager.onAccept += delegate (Socket cfd)
-            {
-                if (m_Clients.ContainsKey(cfd))
-                {
-                    Console.WriteLine("client has been in online list.");
-                    return;
-                }
-                Console.WriteLine("new client has connected to server.");
-                m_Clients.Add(cfd, new Client { cfd = cfd, lastBeat = Timer.time });
-            };
-            ServerNetManager.Bind("127.0.0.1", 8888);
-        }
-
-        private void ListenProtoc()
-        {
-            CombatMatchListener.instance.AddListener(this.CombatMatch);
-            HeartbeatListener.instance.AddListener(this.AnswerHeartBeat);
-        }
-
         private void CombatMatch(Socket cfd, CombatMatch combatMatch)
         {
             m_SysCombatRoom.JoinCombatMatch(cfd);
         }
-
-        private void AnswerHeartBeat(Socket cfd, Heartbeat heartbeat)
+        private void CancelCombatMatch(Socket cfd, CancelCombatMatch cancelCombatMatch)
         {
-            ServerNetManager.Send(cfd, (Int16)ProtocType.Heartbeat, new Heartbeat());
-            if (m_Clients.ContainsKey(cfd))
-            {
-                m_Clients[cfd].lastBeat = Timer.time;
-            }
+            m_SysCombatRoom.CancelCombatMatch(cfd);
+        }
+        private void QuitCombat()
+        {
+
         }
 
         public class Client

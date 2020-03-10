@@ -21,10 +21,21 @@ namespace HamPig.Network
         private List<AcceptEvent> m_AcceptEventList = new List<AcceptEvent>();
         private int m_AcceptEventCount = 0;
 
+        public Action<Socket> onClose { get; set; }
+        private SocketEvent<CloseEvent> m_CloseEvents = new SocketEvent<CloseEvent>();
+
         public ServerSocket()
         {
             onReceive = new Listener<Socket, byte[]>();
             onAccept = new Listener<Socket>();
+            m_CloseEvents.AddListener(delegate (CloseEvent msg)
+            {
+                if (onClose != null)
+                {
+                    onClose.Invoke(msg.cfd);
+                }
+                msg.cfd.Close();
+            });
             m_Listenfd = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             //m_Listenfd.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true); 先不弄端口复用
@@ -38,7 +49,6 @@ namespace HamPig.Network
             m_Listenfd.Listen(0);   // 不限制待连接数
             m_Listenfd.BeginAccept(AcceptCallback, m_Listenfd);
         }
-
         public void Tick()
         {
             // 处理 accept 事件
@@ -66,11 +76,14 @@ namespace HamPig.Network
                 }
                 onReceive.Invoke(msg.clientfd, msg.byteData);
             }
-        }
 
+            m_CloseEvents.InvokeEvent();
+        }
         public void Send(Socket cfd, byte[] data)
         {
-            //if (!m_OnlineClients.ContainsKey(cfd)) return;
+            if (!cfd.Connected) return;
+
+
             Int16 len = (Int16)data.Length;
             byte[] lenBytes = LittleEndianByte.GetBytes(len);
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
@@ -85,12 +98,6 @@ namespace HamPig.Network
                 Socket listenfd = (Socket)ar.AsyncState;
                 Socket clientfd = listenfd.EndAccept(ar);
 
-                lock (m_AcceptEventList)
-                {
-                    m_AcceptEventList.Add(new AcceptEvent { cfd = clientfd });
-                    m_AcceptEventCount++;
-                }
-
                 ClientState state = new ClientState
                 {
                     socket = clientfd,
@@ -99,13 +106,18 @@ namespace HamPig.Network
                 //m_OnlineClients.Add(clientfd, state);
                 clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
+
+                lock (m_AcceptEventList)
+                {
+                    m_AcceptEventList.Add(new AcceptEvent { cfd = clientfd });
+                    m_AcceptEventCount++;
+                }
             }
             catch (SocketException ex)
             {
                 Console.WriteLine(ex.ToString());
             }
         }
-
         private void ReceiveCallback(IAsyncResult ar)
         {
             try
@@ -115,10 +127,7 @@ namespace HamPig.Network
                 int count = cfd.EndReceive(ar);
                 if (count == 0)
                 {
-                    // client 请求关闭 socket
-                    Console.WriteLine("client close.");
-                    //m_OnlineClients.Remove(cfd);
-                    cfd.Close();
+                    m_CloseEvents.AddEvent(new CloseEvent { cfd = cfd });
                 }
                 else
                 {
@@ -147,7 +156,6 @@ namespace HamPig.Network
                 Console.WriteLine(ex.ToString());
             }
         }
-
         private void SendCallback(IAsyncResult ar)
         {
             try
@@ -161,12 +169,53 @@ namespace HamPig.Network
             }
         }
 
+        public class SocketEvent<T>
+            where T : class
+        {
+            private Queue<T> m_Events = new Queue<T>();
+            private Int32 m_EventCount = 0;
+            private Action<T> m_Action;
+
+            public void AddEvent(T msg)
+            {
+                lock (m_Events)
+                {
+                    m_Events.Enqueue(msg);
+                    ++m_EventCount;
+                }
+            }
+            public void AddListener(Action<T> action)
+            {
+                m_Action += action;
+            }
+            public void RemoveListener(Action<T> action)
+            {
+                if (m_Action == null) return;
+                m_Action -= action;
+            }
+            public void InvokeEvent()
+            {
+                while(m_EventCount > 0)
+                {
+                    T msg = null;
+                    lock (m_Events)
+                    {
+                        msg = m_Events.Dequeue();
+                        --m_EventCount;
+                    }
+                    if(m_Action != null)
+                    {
+                        m_Action.Invoke(msg);
+                    }
+                }
+            }
+        }
+
         private class ClientState
         {
             public Socket socket;
             public SocketReadBuffer readBuffer;
         }
-
         private class Data
         {
             public Socket clientfd;
@@ -174,6 +223,10 @@ namespace HamPig.Network
         }
 
         public class AcceptEvent
+        {
+            public Socket cfd;
+        }
+        public class CloseEvent
         {
             public Socket cfd;
         }

@@ -11,19 +11,28 @@ namespace HamPig.Network
     public class ServerNetManager
     {
         public static Action<Socket> onAccept { get; set; }
+        public static Action<Socket> onClose
+        {
+            get
+            {
+                return m_ServerSocket.onClose;
+            }
+            set
+            {
+                m_ServerSocket.onClose = value;
+            }
+        }
 
-        private static ServerSocket m_ServerSocket;
+        private static ServerSocket m_ServerSocket = new ServerSocket();
         private static Dictionary<Int16, IProtocListener> m_ProtocMap = new Dictionary<Int16, IProtocListener>();
+
         public static void Register(Int16 id, IProtocListener protoc)
         {
             if (m_ProtocMap.ContainsKey(id)) return;
             m_ProtocMap.Add(id, protoc);
         }
-
         public static void Bind(String ip, Int32 port)
         {
-            if (m_ServerSocket != null) return;
-            m_ServerSocket = new ServerSocket();
             m_ServerSocket.Bind(ip, port);
             m_ServerSocket.onReceive.AddListener(delegate (Socket cfd, byte[] data)
             {
@@ -39,7 +48,6 @@ namespace HamPig.Network
                     onAccept.Invoke(cfd);
             });
         }
-
         public static void Send(Socket cfd, Int16 key, IMessage msg)
         {
             if (m_ServerSocket == null) return;
@@ -49,7 +57,6 @@ namespace HamPig.Network
             var sendBytes = typeBytes.Concat(dataBytes).ToArray();
             m_ServerSocket.Send(cfd, sendBytes);
         }
-
         public static void Update()
         {
             if (m_ServerSocket != null)
@@ -60,7 +67,6 @@ namespace HamPig.Network
         {
             void Invoke(Socket cfd, byte[] data, int offset, int size);
         }
-
         public abstract class BaseListener<T, P> : Singleton<T>, IProtocListener
             where T : class, new()
             where P : IMessage

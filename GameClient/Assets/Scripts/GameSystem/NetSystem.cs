@@ -21,15 +21,13 @@ public class NetSystem : MonoBehaviour
 
         GameObject.DontDestroyOnLoad(this.gameObject);
 
+        this.ListenProtoc();
         this.ConnectServer();
-        
     }
-
     private void Start()
     {
         SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
     }
-
     private void Update()
     {
         NetManager.Update();
@@ -39,7 +37,6 @@ public class NetSystem : MonoBehaviour
             this.UpdateHeartBeat();
         }
     }
-
     private void OnDestroy()
     {
         if (this.isConnnected)
@@ -49,6 +46,19 @@ public class NetSystem : MonoBehaviour
         }
     }
 
+    private void ListenProtoc()
+    {
+        ServerOverloadListener.instance.AddListener(delegate (ServerOverload serverOverload)
+        {
+            Debug.Log("服务器已满载，请稍后再连接.");
+            this.Close();
+        });
+        HeartbeatListener.instance.AddListener(delegate (Heartbeat heartbeat)
+        {
+            Debug.Log("新的心跳");
+            m_ReceiveBeat = Time.time;
+        });
+    }
     private void ConnectServer()
     {
         NetManager.onConnect += delegate (bool isSucceed)
@@ -72,10 +82,14 @@ public class NetSystem : MonoBehaviour
 
         NetManager.Connect("127.0.0.1", 8888);
     }
-
+    private void Close()
+    {
+        HamPig.Timer.RemoveInterval(this.SendHeartBeat);
+        isConnnected = false;
+        NetManager.Close();
+    }
     private void ResetHeartBeat()   // 连接成功后调用
     {
-        HeartbeatListener.instance.AddListener(this.HeartbeatRefresh);
         HamPig.Timer.CallInterval(GameConst.INTERVAL_HEART_BEAT, this.SendHeartBeat);
 
         m_SendBeat = Time.time;
@@ -87,9 +101,7 @@ public class NetSystem : MonoBehaviour
         if(Time.time - m_ReceiveBeat > GameConst.INTERVAL_MAX_STOP_BEAT)
         {
             Debug.Log("心跳中止过长，强制关闭 Socket.");
-            HamPig.Timer.RemoveInterval(this.SendHeartBeat);
-            isConnnected = false;
-            NetManager.Close();
+            this.Close();
         }
     }
 
@@ -98,11 +110,5 @@ public class NetSystem : MonoBehaviour
         Debug.Log("发送心跳包");
         NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
         m_SendBeat = Time.time;
-    }
-
-    private void HeartbeatRefresh(Heartbeat heartbeat)
-    {
-        Debug.Log("新的心跳");
-        m_ReceiveBeat = Time.time;
     }
 }

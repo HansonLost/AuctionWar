@@ -11,13 +11,16 @@ public class FightMatching : MonoBehaviour
 {
 #pragma warning disable 0649
     [SerializeField] private Button m_BtnMatch;
+    [SerializeField] private Button m_BtnCancel;
     [SerializeField] private Text m_TxtLog;
 #pragma warning restore 0649
 
     public void Awake()
     {
         CombatMatchResListener.instance.AddListener(this.LogMatchMsg);
+
         m_BtnMatch.onClick.AddListener(this.CombatMatching);
+        m_BtnCancel.onClick.AddListener(this.CancelCambatMatching);
     }
 
     Action action;
@@ -25,13 +28,6 @@ public class FightMatching : MonoBehaviour
     void Start()
     {
         m_TxtLog.text = "请点击匹配";
-    }
-
-    private void Update()
-    {
-        HamPig.Timer.Update();
-        var time = String.Format("当前时间 {0:F6}", HamPig.Timer.time);
-        m_TxtLog.text = time;
     }
 
     private void OnDestroy()
@@ -48,8 +44,21 @@ public class FightMatching : MonoBehaviour
         NetManager.Send(id, combatMatch);
     }
 
+    public void CancelCambatMatching()
+    {
+        m_TxtLog.text = "请点击匹配";
+        NetManager.Send((Int16)ProtocType.CancelCombatMatch, new CancelCombatMatch { });
+    }
+
     public void LogMatchMsg(CombatMatchRes combatMatchRes)
     {
-        SceneManager.LoadScene((Int32)GameConst.SceneType.Combat);
+        if(combatMatchRes.RoomId == CommonConst.ROOM_ERROR)
+        {
+            m_TxtLog.text = "匹配失败，请再次点击匹配";
+        }
+        else
+        {
+            SceneManager.LoadScene((Int32)GameConst.SceneType.Combat);
+        }
     }
 }
