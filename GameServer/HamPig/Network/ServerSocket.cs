@@ -10,29 +10,21 @@ namespace HamPig.Network
 {
     public class ServerSocket
     {
-        private class ClientState
-        {
-            public Socket socket;
-            public SocketReadBuffer readBuffer;
-        }
-
-        private class Data
-        {
-            public Socket clientfd;
-            public byte[] byteData;
-        }
-
-        private Dictionary<Socket, ClientState> m_OnlineClients = new Dictionary<Socket, ClientState>();
+        //private Dictionary<Socket, ClientState> m_OnlineClients = new Dictionary<Socket, ClientState>();
         private Socket m_Listenfd;
 
+        public Listener<Socket, byte[]> onReceive { get; private set; }
         private List<Data> m_DataList = new List<Data>();
         private int m_DataCount = 0;
 
-        public Listener<Socket, byte[]> onReceive { get; private set; }
+        public Listener<Socket> onAccept { get; private set; }
+        private List<AcceptEvent> m_AcceptEventList = new List<AcceptEvent>();
+        private int m_AcceptEventCount = 0;
 
         public ServerSocket()
         {
             onReceive = new Listener<Socket, byte[]>();
+            onAccept = new Listener<Socket>();
             m_Listenfd = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
             //m_Listenfd.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true); 先不弄端口复用
@@ -49,6 +41,20 @@ namespace HamPig.Network
 
         public void Tick()
         {
+            // 处理 accept 事件
+            while(m_AcceptEventCount > 0)
+            {
+                AcceptEvent e = null;
+                lock (m_AcceptEventList)
+                {
+                    e = m_AcceptEventList[0];
+                    m_AcceptEventList.RemoveAt(0);
+                    m_AcceptEventCount--;
+                }
+                onAccept.Invoke(e.cfd);
+            }
+
+            // 处理 receive 事件
             while (m_DataCount > 0)
             {
                 Data msg = null;
@@ -64,9 +70,9 @@ namespace HamPig.Network
 
         public void Send(Socket cfd, byte[] data)
         {
-            if (!m_OnlineClients.ContainsKey(cfd)) return;
+            //if (!m_OnlineClients.ContainsKey(cfd)) return;
             Int16 len = (Int16)data.Length;
-            byte[] lenBytes = LittleEndianByte.GetBytes(len);/* BitConverter.GetBytes(len);*/
+            byte[] lenBytes = LittleEndianByte.GetBytes(len);
             byte[] sendBytes = lenBytes.Concat(data).ToArray();
             cfd.BeginSend(sendBytes, 0, sendBytes.Length, 0, SendCallback, cfd);
         }
@@ -78,12 +84,19 @@ namespace HamPig.Network
                 Console.WriteLine("accept client.");
                 Socket listenfd = (Socket)ar.AsyncState;
                 Socket clientfd = listenfd.EndAccept(ar);
+
+                lock (m_AcceptEventList)
+                {
+                    m_AcceptEventList.Add(new AcceptEvent { cfd = clientfd });
+                    m_AcceptEventCount++;
+                }
+
                 ClientState state = new ClientState
                 {
                     socket = clientfd,
                     readBuffer = new SocketReadBuffer(),
                 };
-                m_OnlineClients.Add(clientfd, state);
+                //m_OnlineClients.Add(clientfd, state);
                 clientfd.BeginReceive(state.readBuffer.recvBuffer, ReceiveCallback, state);
                 listenfd.BeginAccept(AcceptCallback, listenfd);
             }
@@ -104,7 +117,7 @@ namespace HamPig.Network
                 {
                     // client 请求关闭 socket
                     Console.WriteLine("client close.");
-                    m_OnlineClients.Remove(cfd);
+                    //m_OnlineClients.Remove(cfd);
                     cfd.Close();
                 }
                 else
@@ -116,7 +129,6 @@ namespace HamPig.Network
                     {
                         lock (m_DataList)
                         {
-                            
                             m_DataList.Add(new Data
                             {
                                 clientfd = cfd,
@@ -147,6 +159,23 @@ namespace HamPig.Network
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+
+        private class ClientState
+        {
+            public Socket socket;
+            public SocketReadBuffer readBuffer;
+        }
+
+        private class Data
+        {
+            public Socket clientfd;
+            public byte[] byteData;
+        }
+
+        public class AcceptEvent
+        {
+            public Socket cfd;
         }
     }
 }

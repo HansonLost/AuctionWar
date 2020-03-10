@@ -44,6 +44,7 @@ public class NetSystem : MonoBehaviour
     {
         if (this.isConnnected)
         {
+            this.isConnnected = false;
             NetManager.Close();
         }
     }
@@ -53,11 +54,14 @@ public class NetSystem : MonoBehaviour
         NetManager.onConnect += delegate (bool isSucceed)
         {
             isConnnected = isSucceed;
-            Debug.Log(String.Format("连接{0}", isSucceed));
             if (isSucceed)
             {
                 Debug.Log("成功连接服务器");
                 this.ResetHeartBeat();
+            }
+            else
+            {
+                Debug.Log("服务器拒绝连接");
             }
         };
         NetManager.onForceClose += delegate ()
@@ -75,20 +79,30 @@ public class NetSystem : MonoBehaviour
         HamPig.Timer.CallInterval(GameConst.INTERVAL_HEART_BEAT, this.SendHeartBeat);
 
         m_SendBeat = Time.time;
+        m_ReceiveBeat = Time.time;
     }
 
     private void UpdateHeartBeat()
     {
-        NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
+        if(Time.time - m_ReceiveBeat > GameConst.INTERVAL_MAX_STOP_BEAT)
+        {
+            Debug.Log("心跳中止过长，强制关闭 Socket.");
+            HamPig.Timer.RemoveInterval(this.SendHeartBeat);
+            isConnnected = false;
+            NetManager.Close();
+        }
     }
 
     private void SendHeartBeat()
     {
+        Debug.Log("发送心跳包");
         NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
+        m_SendBeat = Time.time;
     }
 
-    private void HeartbeatRefresh(Heartbeat heartbeat)  // 协议驱动刷新心跳
+    private void HeartbeatRefresh(Heartbeat heartbeat)
     {
-
+        Debug.Log("新的心跳");
+        m_ReceiveBeat = Time.time;
     }
 }

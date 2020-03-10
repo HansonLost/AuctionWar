@@ -38,6 +38,7 @@ namespace HamPig
         }
         public void Invoke(T0 t0)
         {
+            if (m_Callback == null) return;
             m_Callback.Invoke(t0);
         }
     }
