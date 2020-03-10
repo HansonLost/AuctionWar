@@ -11,6 +11,7 @@ namespace AuctionWar
 		Heartbeat,
 		Login,
 		LoginRes,
+		QuitCombat,
 		ServerOverload,
 	}
 	public sealed class CancelCombatMatchListener : ServerNetManager.BaseListener<CancelCombatMatchListener, CancelCombatMatch>
@@ -47,6 +48,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.LoginRes;
 		protected override LoginRes ParseData(byte[] data, int offset, int size) => LoginRes.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class QuitCombatListener : ServerNetManager.BaseListener<QuitCombatListener, QuitCombat>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.QuitCombat;
+		protected override QuitCombat ParseData(byte[] data, int offset, int size) => QuitCombat.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class ServerOverloadListener : ServerNetManager.BaseListener<ServerOverloadListener, ServerOverload>
 	{

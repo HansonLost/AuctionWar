@@ -79,6 +79,15 @@ namespace MainServer
             if (!m_MapPlayerToRoom.ContainsKey(cfd)) return;
             var roomId = m_MapPlayerToRoom[cfd];
             var room = m_RoomSet[roomId];
+            m_RoomSet.Remove(roomId);
+            room.ForEachPlayer(delegate (Socket player)
+            {
+                m_MapPlayerToRoom.Remove(player);
+                ServerNetManager.Send(player, (Int16)ProtocType.CombatResult, new CombatResult { });
+            });
+
+            Console.WriteLine(String.Format("当前房间数量：{0}", m_RoomSet.Count));
+            Console.WriteLine(String.Format("当前待匹配玩家数量：{0}", m_MatchingSet.Count));
         }
 
         public class MatchingResult

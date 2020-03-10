@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using HamPig.Network;
+using AuctionWar;
 
 public class CombatManager : MonoBehaviour
 {
@@ -13,10 +15,20 @@ public class CombatManager : MonoBehaviour
 
     private void Awake()
     {
-        m_BtnQuit.onClick.AddListener(this.QuitCombat);
+        CombatResultListener.instance.AddListener(this.QuitCombat);
+
+        m_BtnQuit.onClick.AddListener(delegate()
+        {
+            NetManager.Send((Int16)ProtocType.QuitCombat, new QuitCombat { });
+        });
     }
 
-    private void QuitCombat()
+    private void OnDestroy()
+    {
+        CombatResultListener.instance.RemoveListener(this.QuitCombat);
+    }
+
+    private void QuitCombat(CombatResult combatResult)
     {
         SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
     }

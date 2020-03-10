@@ -57,6 +57,7 @@ namespace MainServer
             CombatMatchListener.instance.AddListener(this.CombatMatch);
             HeartbeatListener.instance.AddListener(this.AnswerHeartBeat);
             CancelCombatMatchListener.instance.AddListener(this.CancelCombatMatch);
+            QuitCombatListener.instance.AddListener(this.QuitCombat);
 
             ServerNetManager.onAccept += delegate (Socket cfd)
             {
@@ -114,9 +115,9 @@ namespace MainServer
         {
             m_SysCombatRoom.CancelCombatMatch(cfd);
         }
-        private void QuitCombat()
+        private void QuitCombat(Socket cfd, QuitCombat quitCombat)
         {
-
+            m_SysCombatRoom.QuitCombat(cfd);
         }
 
         public class Client
