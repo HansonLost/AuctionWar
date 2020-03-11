@@ -12,7 +12,10 @@ public class QuestManager : MonoBehaviour
 
     private void Awake()
     {
-        //m_BtnMarket.onClick.AddListener()
+        m_BtnMarket.onClick.AddListener(delegate ()
+        {
+            CombatManager.instance.ShowPanel(CombatManager.PanelType.Market);
+        });
     }
 
     private void LoadMarketPanel()

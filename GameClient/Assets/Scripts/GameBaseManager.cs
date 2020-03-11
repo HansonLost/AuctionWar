@@ -22,8 +22,6 @@ public abstract class GameBaseManager<T> : MonoBehaviour
         instance = this.GetInstance();
         if (this.IsDonDestroyOnLoad()) GameObject.DontDestroyOnLoad(this.gameObject);
     }
-    protected virtual void Update() { }
-    protected virtual void OnDestroy() { }
 
     protected abstract T GetInstance();
     protected abstract bool IsDonDestroyOnLoad();
