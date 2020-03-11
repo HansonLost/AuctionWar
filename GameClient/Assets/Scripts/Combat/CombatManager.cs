@@ -7,13 +7,16 @@ using System;
 using HamPig.Network;
 using AuctionWar;
 
-public class CombatManager : MonoBehaviour
+public class CombatManager : GameBaseManager<CombatManager>
 {
+    protected override CombatManager GetInstance() => this;
+    protected override bool IsDonDestroyOnLoad() => false;
+
 #pragma warning disable 0649
     [SerializeField] private Button m_BtnQuit;
 #pragma warning disable 0649
 
-    private void Awake()
+    protected override void Awake()
     {
         CombatResultListener.instance.AddListener(this.QuitCombat);
 
@@ -22,14 +25,20 @@ public class CombatManager : MonoBehaviour
             NetManager.Send((Int16)ProtocType.QuitCombat, new QuitCombat { });
         });
     }
-
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         CombatResultListener.instance.RemoveListener(this.QuitCombat);
     }
-
     private void QuitCombat(CombatResult combatResult)
     {
         SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
+    }
+
+    public enum PanelType
+    {
+        Quest,
+        Market,
+        Process,
+        Auction,
     }
 }
