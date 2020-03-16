@@ -15,11 +15,10 @@ namespace HamPig.Network
 
         private static Dictionary<Int16, IProtocListener> m_ProtocMap = new Dictionary<Int16, IProtocListener>();
 
-        private static ClientSocket m_ClientSocket;
+        private static ClientSocket m_ClientSocket = new ClientSocket();
 
         public static void Connect(String ip, Int32 port)
         {
-            m_ClientSocket = new ClientSocket();
             m_ClientSocket.onReceive.AddListener(delegate (byte[] data)
             {
                 Int16 type = LittleEndianByte.GetInt16(data, 0);

@@ -14,11 +14,12 @@ public class CombatManager : GameBaseManager<CombatManager>
 
 #pragma warning disable 0649
     [SerializeField] private RectTransform m_Canvas;
-    [SerializeField] private Button m_BtnQuit;
+    [SerializeField] private GameObject m_FixedPanel;
     [SerializeField] private PanelPrefab[] m_Panels;
 #pragma warning disable 0649
 
     private Dictionary<PanelType, GameObject> m_PanelMap = new Dictionary<PanelType, GameObject>();
+    private CombatPanel m_CombatPanel;
 
     public void ShowPanel(PanelType type)
     {
@@ -35,11 +36,6 @@ public class CombatManager : GameBaseManager<CombatManager>
         base.Awake();
         LoadPanel();
         CombatResultListener.instance.AddListener(this.QuitCombat);
-
-        m_BtnQuit.onClick.AddListener(delegate()
-        {
-            NetManager.Send((Int16)ProtocType.QuitCombat, new QuitCombat { });
-        });
     }
     private void Start()
     {
@@ -58,6 +54,8 @@ public class CombatManager : GameBaseManager<CombatManager>
             panel.SetActive(false);
             m_PanelMap.Add(info.type, panel);
         }
+        var go = GameObject.Instantiate(m_FixedPanel, m_Canvas);
+        m_CombatPanel = go.GetComponent<CombatPanel>();
     }
     private void QuitCombat(CombatResult combatResult)
     {
