@@ -7,8 +7,8 @@ namespace HamPig
     public class Timer
     {
         private static readonly Int64 m_StartTick = DateTime.Now.Ticks;
-        private static LinkedList<OnceEvent> m_OnceEvents = new LinkedList<OnceEvent>();
-        private static LinkedList<IntervalEvent> m_IntervalEvent = new LinkedList<IntervalEvent>();
+        private static Dictionary<Handle, OnceEvent> m_OnceEvents = new Dictionary<Handle, OnceEvent>();
+        private static Dictionary<Handle, IntervalEvent> m_IntervalEvent = new Dictionary<Handle, IntervalEvent>();
 
         /// <summary>
         /// 从程序启动到当前所经过的秒数
@@ -22,61 +22,87 @@ namespace HamPig
             }
         }
 
-        public static void CallOnce(float interval, Action action)
+        public static Handle CallOnce(float interval, Action action)
         {
-            m_OnceEvents.AddLast(new OnceEvent
+            Handle handle = new Handle();
+            m_OnceEvents.Add(handle, new OnceEvent
             {
                 action = action,
                 timeCall = Timer.time + interval,
+                isStop = false,
             });
+            return handle;
         }
 
-        public static void CallInterval(float interval, Action action)
+        public static Handle CallInterval(float interval, Action action)
         {
-            m_IntervalEvent.AddLast(new IntervalEvent
+            Handle handle = new Handle();
+            m_IntervalEvent.Add(handle, new IntervalEvent
             {
                 action = action,
                 timeCall = Timer.time + interval,
                 interval = interval,
             });
+            return handle;
         }
 
-        public static void RemoveOnce(Action action)
+        public static void Remove(Handle handle)
         {
-            m_OnceEvents.RemoveJudge((OnceEvent item) => { return (item.action == action); });
+            RemoveOnce(handle);
+            RemoveInterval(handle);
         }
 
-        public static void RemoveInterval(Action action)
+        public static void RemoveOnce(Handle handle)
         {
-            m_IntervalEvent.RemoveJudge((IntervalEvent item) => { return (item.action == action); });
+            /* 
+             * Once 有可能被委托含有 RemoveOnce 的函数，从而导致在 Once 进行 foreach 时进行 remove 操作。
+             * 因此，需要需要延迟移除，在 Update 时才统一进行移除。
+             * 为了能够移除也是同一时间触发的事件，采用在 Event 中加字段来禁止执行。
+             */
+            if (!m_OnceEvents.ContainsKey(handle)) return;
+            m_OnceEvents[handle].isStop = true;
+        }
+
+        public static void RemoveInterval(Handle handle)
+        {
+            if (!m_IntervalEvent.ContainsKey(handle)) return;
+            m_IntervalEvent[handle].isStop = true;
         }
 
         public static void Update()
         {
             float timeCurr = Timer.time;
-            m_OnceEvents.RemoveJudge(delegate (OnceEvent item)
+            m_OnceEvents.RemoveJudge(delegate (Handle handle, OnceEvent onceEvent)
             {
-                bool isCall = (timeCurr >= item.timeCall);
+                if (onceEvent.isStop) return true;
+
+                bool isCall = (timeCurr >= onceEvent.timeCall);
                 if (isCall)
                 {
-                    item.action.Invoke();
+                    onceEvent.action.Invoke();
                 }
                 return isCall;
             });
-            foreach (var item in m_IntervalEvent)
+            m_IntervalEvent.RemoveJudge((Handle handle, IntervalEvent intervalEvent) =>
             {
-                if (timeCurr >= item.timeCall)
+                if (intervalEvent.isStop) return true;
+
+                if (timeCurr >= intervalEvent.timeCall)
                 {
-                    item.action.Invoke();
-                    item.timeCall += item.interval;
+                    intervalEvent.action.Invoke();
+                    intervalEvent.timeCall += intervalEvent.interval;
                 }
-            }
+                return false;
+            });
         }
+
+        public class Handle { }
 
         public class OnceEvent
         {
             public Action action;
             public float timeCall;
+            public bool isStop;
         }
 
         public class IntervalEvent
@@ -84,6 +110,7 @@ namespace HamPig
             public Action action;
             public float timeCall;
             public float interval;
+            public bool isStop;
         }
     }
 }

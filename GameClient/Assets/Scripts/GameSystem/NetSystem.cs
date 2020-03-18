@@ -11,6 +11,7 @@ public class NetSystem : MonoBehaviour
     public static NetSystem instance { get; private set; }
     public bool isConnnected { get; private set; }
 
+    private HamPig.Timer.Handle m_HdlBeat;
     private float m_SendBeat;   // 上一次发送 beat 的时间
     private float m_ReceiveBeat;   // 上一次接收 beat 的时间
 
@@ -51,7 +52,7 @@ public class NetSystem : MonoBehaviour
         ServerOverloadListener.instance.AddListener(delegate (ServerOverload serverOverload)
         {
             Debug.Log("服务器已满载，请稍后再连接.");
-            this.Close();
+            this.Close(true);
         });
         HeartbeatListener.instance.AddListener(delegate (Heartbeat heartbeat)
         {
@@ -76,21 +77,25 @@ public class NetSystem : MonoBehaviour
         };
         NetManager.onForceClose += delegate ()
         {
-            this.isConnnected = false;
             Debug.Log("远程强制关闭连接");
+            this.Close(false);
         };
 
         NetManager.Connect("127.0.0.1", 8888);
     }
-    private void Close()
+    private void Close(bool isInitiative)
     {
-        HamPig.Timer.RemoveInterval(this.SendHeartBeat);
+        HamPig.Timer.RemoveInterval(this.m_HdlBeat);
+        this.m_HdlBeat = null;
         isConnnected = false;
-        NetManager.Close();
+        if (isInitiative)
+        {
+            NetManager.Close();
+        }
     }
     private void ResetHeartBeat()   // 连接成功后调用
     {
-        HamPig.Timer.CallInterval(GameConst.INTERVAL_HEART_BEAT, this.SendHeartBeat);
+        m_HdlBeat = HamPig.Timer.CallInterval(GameConst.INTERVAL_HEART_BEAT, this.SendHeartBeat);
 
         m_SendBeat = Time.time;
         m_ReceiveBeat = Time.time;
@@ -101,7 +106,7 @@ public class NetSystem : MonoBehaviour
         if(Time.time - m_ReceiveBeat > GameConst.INTERVAL_MAX_STOP_BEAT)
         {
             Debug.Log("心跳中止过长，强制关闭 Socket.");
-            this.Close();
+            this.Close(true);
         }
     }
 

@@ -40,6 +40,7 @@ public class CombatManager : GameBaseManager<CombatManager>
     private void Start()
     {
         this.ShowPanel(PanelType.Quest);
+        NetManager.Send((Int16)ProtocType.CombatReady, new CombatReady());
     }
     private void OnDestroy()
     {

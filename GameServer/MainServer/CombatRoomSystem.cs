@@ -82,14 +82,12 @@ namespace MainServer
         }
         public void QuitCombat(Socket cfd)
         {
-            if (!m_MapPlayerToRoom.ContainsKey(cfd)) return;
-            var roomId = m_MapPlayerToRoom[cfd];
-            var room = m_RoomSet[roomId];
+            var room = this.GetPlayerRoom(cfd);
+            if (room == null) return;
+            Console.WriteLine(String.Format("房间 {0}：{1}号玩家退出对战", room.roomId, room.GetPlayerId(cfd)));
             room.Clear();
-            m_RoomSet.Remove(roomId);
-
-            Console.WriteLine(String.Format("当前房间数量：{0}", m_RoomSet.Count));
-            Console.WriteLine(String.Format("当前待匹配玩家数量：{0}", m_MatchingSet.Count));
+            m_RoomSet.Remove(room.roomId);
+            m_MapPlayerToRoom.Remove(cfd);
         }
 
         private void AddCombatCommand(Socket cfd, CombatCommand combatCommand)
@@ -124,7 +122,8 @@ namespace MainServer
 
         public class CombatRoom
         {
-            public const Int32 MAX_PLAYER = 2;
+            public const Int32 MAX_PLAYER = 1;
+            public const Int32 ID_PLAYER_ERROR = 0;
 
             public UInt32 roomId { get; private set; }
             public CombatRoom(UInt32 roomId)
@@ -161,6 +160,11 @@ namespace MainServer
                     id = m_NextId,
                 });
                 m_NextId++;
+            }
+            public Int32 GetPlayerId(Socket cfd)
+            {
+                if (!m_Players.ContainsKey(cfd)) return ID_PLAYER_ERROR;
+                return m_Players[cfd].id;
             }
 
             private Int32 m_ReadyCount;
