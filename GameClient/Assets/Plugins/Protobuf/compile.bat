@@ -11,7 +11,7 @@ echo LOG : begin compile client file.
 del %DST%\*.cs /f /s /q /a
 for %%i in (%SRC%\*.proto) do (
 	echo compile file : %%~fi
-	%COMPILER% %%i --csharp_out=%DST%
+	%COMPILER% %%i -I=%SRC% --csharp_out=%DST%
 )
 
 rem 编写 template
@@ -43,7 +43,7 @@ echo LOG : begin compile server file.
 del %ServerDst%\*.cs /f /s /q /a
 for %%i in (%SRC%\*.proto) do (
 	echo compile file : %%~fi
-	%COMPILER% %%i --csharp_out=%ServerDst%
+	%COMPILER% %%i -I=%SRC% --csharp_out=%ServerDst%
 )
 
 setlocal enabledelayedexpansion 

@@ -5,9 +5,11 @@ namespace AuctionWar
 	public enum ProtocType
 	{
 		CancelCombatMatch,
+		CombatCommand,
 		CombatMatch,
 		CombatMatchRes,
 		CombatResult,
+		FramePackage,
 		Heartbeat,
 		Login,
 		LoginRes,
@@ -18,6 +20,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.CancelCombatMatch;
 		protected override CancelCombatMatch ParseData(byte[] data, int offset, int size) => CancelCombatMatch.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class CombatCommandListener : ServerNetManager.BaseListener<CombatCommandListener, CombatCommand>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.CombatCommand;
+		protected override CombatCommand ParseData(byte[] data, int offset, int size) => CombatCommand.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class CombatMatchListener : ServerNetManager.BaseListener<CombatMatchListener, CombatMatch>
 	{
@@ -33,6 +40,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.CombatResult;
 		protected override CombatResult ParseData(byte[] data, int offset, int size) => CombatResult.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class FramePackageListener : ServerNetManager.BaseListener<FramePackageListener, FramePackage>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.FramePackage;
+		protected override FramePackage ParseData(byte[] data, int offset, int size) => FramePackage.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class HeartbeatListener : ServerNetManager.BaseListener<HeartbeatListener, Heartbeat>
 	{

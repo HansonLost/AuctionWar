@@ -1,0 +1,8 @@
+syntax = "proto3";
+package AuctionWar;
+
+message CombatCommand
+{
+	int32 id = 1;
+	bytes parm = 2;
+}

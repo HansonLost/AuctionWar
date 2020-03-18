@@ -1,0 +1,10 @@
+syntax = "proto3";
+package AuctionWar;
+
+import "CombatCommand.proto";
+
+message FramePackage
+{
+	int32 seq = 1;
+	repeated CombatCommand data = 2;
+}

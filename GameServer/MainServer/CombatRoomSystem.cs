@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Google.Protobuf;
 using HamPig;
 using HamPig.Network;
 using AuctionWar;
@@ -14,6 +15,13 @@ namespace MainServer
         private Dictionary<Socket, UInt32> m_MapPlayerToRoom = new Dictionary<Socket, UInt32>();
         private IdAllocator m_RoomAllocator = new IdAllocator(1, 10000);
 
+        public void Awake()
+        {
+            CombatCommandListener.instance.AddListener(delegate(Socket cfd, CombatCommand combatCommand)
+            {
+                this.AddCombatCommand(cfd, combatCommand.Id, combatCommand.Parm);
+            });
+        }
         public void Update()
         {
             this.Matching();
@@ -90,6 +98,14 @@ namespace MainServer
             Console.WriteLine(String.Format("当前待匹配玩家数量：{0}", m_MatchingSet.Count));
         }
 
+        private void AddCombatCommand(Socket cfd, Int32 cmdId, ByteString cmdParm)
+        {
+            if (!m_MapPlayerToRoom.ContainsKey(cfd)) return;
+            var roomId = m_MapPlayerToRoom[cfd];
+            if (!m_RoomSet.ContainsKey(roomId)) return;
+            var room = m_RoomSet[roomId];
+        }
+
         public class MatchingResult
         {
             public UInt32 roomId;
@@ -99,20 +115,32 @@ namespace MainServer
         public class CombatRoom
         {
             public const Int32 MAX_PLAYER = 2;
-            private List<Socket> m_PLayerList = new List<Socket>();
+
+            private List<Socket> m_PlayerList = new List<Socket>();
             public UInt32 roomId { get; private set; }
             public CombatRoom(UInt32 roomId)
             {
                 this.roomId = roomId;
+                Timer.CallInterval(CommonConst.FRAME_INTERVAL, () =>
+                {
+
+                });
+            }
+            public void Clear()
+            {
+                foreach (var player in m_PlayerList)
+                {
+                    ServerNetManager.Send(player, (Int16)ProtocType.CombatResult, new CombatResult { });
+                }
             }
             public void AddPlayer(Socket cfd)
             {
-                if (m_PLayerList.Count >= MAX_PLAYER) return;
-                m_PLayerList.Add(cfd);
+                if (m_PlayerList.Count >= MAX_PLAYER) return;
+                m_PlayerList.Add(cfd);
             }
             public void ForEachPlayer(Action<Socket> func)
             {
-                foreach (var player in m_PLayerList)
+                foreach (var player in m_PlayerList)
                 {
                     func(player);
                 }

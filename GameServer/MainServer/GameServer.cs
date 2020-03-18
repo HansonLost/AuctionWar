@@ -8,6 +8,8 @@ using HamPig;
 using AuctionWar;
 using System.Net.Sockets;
 
+using Google.Protobuf;
+
 namespace MainServer
 {
     public class GameServer
@@ -23,6 +25,8 @@ namespace MainServer
         {
             Console.WriteLine("Server running...");
             isShutdown = false;
+
+            m_SysCombatRoom.Awake();
             this.AwakeServer();
             this.ListenProtoc();
         }
