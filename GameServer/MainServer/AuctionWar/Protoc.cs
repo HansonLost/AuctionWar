@@ -8,6 +8,7 @@ namespace AuctionWar
 		CombatCommand,
 		CombatMatch,
 		CombatMatchRes,
+		CombatReady,
 		CombatResult,
 		FramePackage,
 		Heartbeat,
@@ -35,6 +36,11 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.CombatMatchRes;
 		protected override CombatMatchRes ParseData(byte[] data, int offset, int size) => CombatMatchRes.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class CombatReadyListener : ServerNetManager.BaseListener<CombatReadyListener, CombatReady>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.CombatReady;
+		protected override CombatReady ParseData(byte[] data, int offset, int size) => CombatReady.Parser.ParseFrom(data, offset, size);
 	}
 	public sealed class CombatResultListener : ServerNetManager.BaseListener<CombatResultListener, CombatResult>
 	{

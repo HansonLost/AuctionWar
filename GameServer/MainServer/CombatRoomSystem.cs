@@ -17,10 +17,8 @@ namespace MainServer
 
         public void Awake()
         {
-            CombatCommandListener.instance.AddListener(delegate(Socket cfd, CombatCommand combatCommand)
-            {
-                this.AddCombatCommand(cfd, combatCommand.Id, combatCommand.Parm);
-            });
+            CombatCommandListener.instance.AddListener(this.AddCombatCommand);
+            CombatReadyListener.instance.AddListener(this.PlayerReady);
         }
         public void Update()
         {
@@ -87,23 +85,35 @@ namespace MainServer
             if (!m_MapPlayerToRoom.ContainsKey(cfd)) return;
             var roomId = m_MapPlayerToRoom[cfd];
             var room = m_RoomSet[roomId];
+            room.Clear();
             m_RoomSet.Remove(roomId);
-            room.ForEachPlayer(delegate (Socket player)
-            {
-                m_MapPlayerToRoom.Remove(player);
-                ServerNetManager.Send(player, (Int16)ProtocType.CombatResult, new CombatResult { });
-            });
 
             Console.WriteLine(String.Format("当前房间数量：{0}", m_RoomSet.Count));
             Console.WriteLine(String.Format("当前待匹配玩家数量：{0}", m_MatchingSet.Count));
         }
 
-        private void AddCombatCommand(Socket cfd, Int32 cmdId, ByteString cmdParm)
+        private void AddCombatCommand(Socket cfd, CombatCommand combatCommand)
         {
-            if (!m_MapPlayerToRoom.ContainsKey(cfd)) return;
+            var room = this.GetPlayerRoom(cfd);
+            if (room == null) return;
+            room.AddCommand(cfd, combatCommand.Id, combatCommand.Parm);
+        }
+        private void PlayerReady(Socket cfd, CombatReady combatReady)
+        {
+            var room = this.GetPlayerRoom(cfd);
+            if (room == null) return;
+            room.ReadyPlayer(cfd);
+            if (room.IsAllReady())
+            {
+                room.Run();
+            }
+        }
+        private CombatRoom GetPlayerRoom(Socket cfd)
+        {
+            if (!m_MapPlayerToRoom.ContainsKey(cfd)) return null;
             var roomId = m_MapPlayerToRoom[cfd];
-            if (!m_RoomSet.ContainsKey(roomId)) return;
-            var room = m_RoomSet[roomId];
+            if (!m_RoomSet.ContainsKey(roomId)) return null;
+            return m_RoomSet[roomId];
         }
 
         public class MatchingResult
@@ -116,34 +126,102 @@ namespace MainServer
         {
             public const Int32 MAX_PLAYER = 2;
 
-            private List<Socket> m_PlayerList = new List<Socket>();
             public UInt32 roomId { get; private set; }
             public CombatRoom(UInt32 roomId)
             {
                 this.roomId = roomId;
-                Timer.CallInterval(CommonConst.FRAME_INTERVAL, () =>
-                {
-
-                });
+                this.m_NextId = 1;
+                this.m_NextSeq = 1;
+                this.m_ReadyCount = 0;
+            }
+            public void Run()
+            {
+                // TODO 所有玩家准备完毕即可开始
+                Timer.CallInterval(CommonConst.FRAME_INTERVAL, this.SendFrame);
             }
             public void Clear()
             {
-                foreach (var player in m_PlayerList)
+                foreach (var pair in m_Players)
                 {
-                    ServerNetManager.Send(player, (Int16)ProtocType.CombatResult, new CombatResult { });
+                    var player = pair.Value;
+                    ServerNetManager.Send(player.cfd, (Int16)ProtocType.CombatResult, new CombatResult { });
                 }
+                m_Players.Clear();
+                m_NextId = 1;
             }
+
+            private Int32 m_NextId;
+            private Dictionary<Socket, Player> m_Players = new Dictionary<Socket, Player>();
             public void AddPlayer(Socket cfd)
             {
-                if (m_PlayerList.Count >= MAX_PLAYER) return;
-                m_PlayerList.Add(cfd);
-            }
-            public void ForEachPlayer(Action<Socket> func)
-            {
-                foreach (var player in m_PlayerList)
+                if (m_Players.Count >= MAX_PLAYER) return;
+                m_Players.Add(cfd, new Player
                 {
-                    func(player);
+                    cfd = cfd,
+                    id = m_NextId,
+                });
+                m_NextId++;
+            }
+
+            private Int32 m_ReadyCount;
+            public void ReadyPlayer(Socket cfd)
+            {
+                if (!m_Players.ContainsKey(cfd)) return;
+                m_Players[cfd].isReady = true;
+                m_ReadyCount++;
+            }
+            public bool IsAllReady() { return (m_ReadyCount == m_Players.Count); }
+
+            private List<Command> m_Commands = new List<Command>();
+            public void AddCommand(Socket cfd, Int32 cmdId, ByteString parm)
+            {
+                if (!m_Players.ContainsKey(cfd)) return;
+                var player = m_Players[cfd];
+                m_Commands.Add(new Command
+                {
+                    playerId = player.id,
+                    cmdId = cmdId,
+                    parm = parm,
+                });
+            }
+
+            private Int32 m_NextSeq;
+            private void SendFrame()
+            {
+
+                var frame = new FramePackage
+                {
+                    Seq = m_NextSeq,
+                };
+                m_NextSeq++;
+                foreach (var cmd in m_Commands)
+                {
+                    frame.Data.Add(new FramePackage.Types.Command
+                    {
+                        PlayerId = cmd.playerId,
+                        CommandId = cmd.cmdId,
+                        Parameter = cmd.parm,
+                    });
                 }
+                foreach (var pair in m_Players)
+                {
+                    var cfd = pair.Key;
+                    ServerNetManager.Send(cfd, (Int16)ProtocType.FramePackage, frame);
+                }
+            }
+
+            public class Player
+            {
+                public Socket cfd;
+                public Int32 id;
+                public bool isReady;
+            }
+
+            public class Command
+            {
+                public Int32 playerId;
+                public Int32 cmdId;
+                public ByteString parm;
             }
         }
     }

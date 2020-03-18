@@ -24,13 +24,15 @@ namespace AuctionWar {
     static FramePackageReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChJGcmFtZVBhY2thZ2UucHJvdG8SCkF1Y3Rpb25XYXIaE0NvbWJhdENvbW1h",
-            "bmQucHJvdG8iRAoMRnJhbWVQYWNrYWdlEgsKA3NlcRgBIAEoBRInCgRkYXRh",
-            "GAIgAygLMhkuQXVjdGlvbldhci5Db21iYXRDb21tYW5kYgZwcm90bzM="));
+            "ChJGcmFtZVBhY2thZ2UucHJvdG8SCkF1Y3Rpb25XYXIijgEKDEZyYW1lUGFj",
+            "a2FnZRILCgNzZXEYASABKAUSLgoEZGF0YRgCIAMoCzIgLkF1Y3Rpb25XYXIu",
+            "RnJhbWVQYWNrYWdlLkNvbW1hbmQaQQoHQ29tbWFuZBIQCghwbGF5ZXJJZBgB",
+            "IAEoBRIRCgljb21tYW5kSWQYAiABKAUSEQoJcGFyYW1ldGVyGAMgASgMYgZw",
+            "cm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::AuctionWar.CombatCommandReflection.Descriptor, },
+          new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.FramePackage), global::AuctionWar.FramePackage.Parser, new[]{ "Seq", "Data" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.FramePackage), global::AuctionWar.FramePackage.Parser, new[]{ "Seq", "Data" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.FramePackage.Types.Command), global::AuctionWar.FramePackage.Types.Command.Parser, new[]{ "PlayerId", "CommandId", "Parameter" }, null, null, null, null)})
           }));
     }
     #endregion
@@ -85,11 +87,11 @@ namespace AuctionWar {
 
     /// <summary>Field number for the "data" field.</summary>
     public const int DataFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::AuctionWar.CombatCommand> _repeated_data_codec
-        = pb::FieldCodec.ForMessage(18, global::AuctionWar.CombatCommand.Parser);
-    private readonly pbc::RepeatedField<global::AuctionWar.CombatCommand> data_ = new pbc::RepeatedField<global::AuctionWar.CombatCommand>();
+    private static readonly pb::FieldCodec<global::AuctionWar.FramePackage.Types.Command> _repeated_data_codec
+        = pb::FieldCodec.ForMessage(18, global::AuctionWar.FramePackage.Types.Command.Parser);
+    private readonly pbc::RepeatedField<global::AuctionWar.FramePackage.Types.Command> data_ = new pbc::RepeatedField<global::AuctionWar.FramePackage.Types.Command>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::AuctionWar.CombatCommand> Data {
+    public pbc::RepeatedField<global::AuctionWar.FramePackage.Types.Command> Data {
       get { return data_; }
     }
 
@@ -183,6 +185,198 @@ namespace AuctionWar {
         }
       }
     }
+
+    #region Nested types
+    /// <summary>Container for nested types declared in the FramePackage message type.</summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static partial class Types {
+      public sealed partial class Command : pb::IMessage<Command> {
+        private static readonly pb::MessageParser<Command> _parser = new pb::MessageParser<Command>(() => new Command());
+        private pb::UnknownFieldSet _unknownFields;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public static pb::MessageParser<Command> Parser { get { return _parser; } }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public static pbr::MessageDescriptor Descriptor {
+          get { return global::AuctionWar.FramePackage.Descriptor.NestedTypes[0]; }
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        pbr::MessageDescriptor pb::IMessage.Descriptor {
+          get { return Descriptor; }
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public Command() {
+          OnConstruction();
+        }
+
+        partial void OnConstruction();
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public Command(Command other) : this() {
+          playerId_ = other.playerId_;
+          commandId_ = other.commandId_;
+          parameter_ = other.parameter_;
+          _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public Command Clone() {
+          return new Command(this);
+        }
+
+        /// <summary>Field number for the "playerId" field.</summary>
+        public const int PlayerIdFieldNumber = 1;
+        private int playerId_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public int PlayerId {
+          get { return playerId_; }
+          set {
+            playerId_ = value;
+          }
+        }
+
+        /// <summary>Field number for the "commandId" field.</summary>
+        public const int CommandIdFieldNumber = 2;
+        private int commandId_;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public int CommandId {
+          get { return commandId_; }
+          set {
+            commandId_ = value;
+          }
+        }
+
+        /// <summary>Field number for the "parameter" field.</summary>
+        public const int ParameterFieldNumber = 3;
+        private pb::ByteString parameter_ = pb::ByteString.Empty;
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public pb::ByteString Parameter {
+          get { return parameter_; }
+          set {
+            parameter_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+          }
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public override bool Equals(object other) {
+          return Equals(other as Command);
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public bool Equals(Command other) {
+          if (ReferenceEquals(other, null)) {
+            return false;
+          }
+          if (ReferenceEquals(other, this)) {
+            return true;
+          }
+          if (PlayerId != other.PlayerId) return false;
+          if (CommandId != other.CommandId) return false;
+          if (Parameter != other.Parameter) return false;
+          return Equals(_unknownFields, other._unknownFields);
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public override int GetHashCode() {
+          int hash = 1;
+          if (PlayerId != 0) hash ^= PlayerId.GetHashCode();
+          if (CommandId != 0) hash ^= CommandId.GetHashCode();
+          if (Parameter.Length != 0) hash ^= Parameter.GetHashCode();
+          if (_unknownFields != null) {
+            hash ^= _unknownFields.GetHashCode();
+          }
+          return hash;
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public override string ToString() {
+          return pb::JsonFormatter.ToDiagnosticString(this);
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public void WriteTo(pb::CodedOutputStream output) {
+          if (PlayerId != 0) {
+            output.WriteRawTag(8);
+            output.WriteInt32(PlayerId);
+          }
+          if (CommandId != 0) {
+            output.WriteRawTag(16);
+            output.WriteInt32(CommandId);
+          }
+          if (Parameter.Length != 0) {
+            output.WriteRawTag(26);
+            output.WriteBytes(Parameter);
+          }
+          if (_unknownFields != null) {
+            _unknownFields.WriteTo(output);
+          }
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public int CalculateSize() {
+          int size = 0;
+          if (PlayerId != 0) {
+            size += 1 + pb::CodedOutputStream.ComputeInt32Size(PlayerId);
+          }
+          if (CommandId != 0) {
+            size += 1 + pb::CodedOutputStream.ComputeInt32Size(CommandId);
+          }
+          if (Parameter.Length != 0) {
+            size += 1 + pb::CodedOutputStream.ComputeBytesSize(Parameter);
+          }
+          if (_unknownFields != null) {
+            size += _unknownFields.CalculateSize();
+          }
+          return size;
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public void MergeFrom(Command other) {
+          if (other == null) {
+            return;
+          }
+          if (other.PlayerId != 0) {
+            PlayerId = other.PlayerId;
+          }
+          if (other.CommandId != 0) {
+            CommandId = other.CommandId;
+          }
+          if (other.Parameter.Length != 0) {
+            Parameter = other.Parameter;
+          }
+          _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+        }
+
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public void MergeFrom(pb::CodedInputStream input) {
+          uint tag;
+          while ((tag = input.ReadTag()) != 0) {
+            switch(tag) {
+              default:
+                _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+                break;
+              case 8: {
+                PlayerId = input.ReadInt32();
+                break;
+              }
+              case 16: {
+                CommandId = input.ReadInt32();
+                break;
+              }
+              case 26: {
+                Parameter = input.ReadBytes();
+                break;
+              }
+            }
+          }
+        }
+
+      }
+
+    }
+    #endregion
 
   }
 

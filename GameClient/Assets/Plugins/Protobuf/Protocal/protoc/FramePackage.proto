@@ -1,10 +1,14 @@
 syntax = "proto3";
 package AuctionWar;
 
-import "CombatCommand.proto";
-
 message FramePackage
 {
+	message Command
+	{
+		int32 playerId = 1;
+		int32 commandId = 2;
+		bytes parameter = 3;
+	}
 	int32 seq = 1;
-	repeated CombatCommand data = 2;
+	repeated Command data = 2;
 }
