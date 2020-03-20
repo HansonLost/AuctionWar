@@ -866,6 +866,7 @@ MonoBehaviour:
   m_BtnMarket: {fileID: 6949193555329955236}
   m_BtnProcess: {fileID: 6949193554929028686}
   m_BtnQuit: {fileID: 6949193553918723885}
+  m_TxtTisTime: {fileID: 2237134481982636718}
 --- !u!1 &6949193555281758417
 GameObject:
   m_ObjectHideFlags: 0

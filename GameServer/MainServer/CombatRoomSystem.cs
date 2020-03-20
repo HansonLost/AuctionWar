@@ -130,7 +130,7 @@ namespace MainServer
             {
                 this.roomId = roomId;
                 this.m_NextId = 1;
-                this.m_NextSeq = 1;
+                this.m_NextSeq = 0;
                 this.m_ReadyCount = 0;
             }
             public void Run()

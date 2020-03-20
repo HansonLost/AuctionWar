@@ -13,6 +13,7 @@ public class CombatPanel : MonoBehaviour
     [SerializeField] private Button m_BtnMarket;
     [SerializeField] private Button m_BtnProcess;
     [SerializeField] private Button m_BtnQuit;
+    [SerializeField] private Text m_TxtTisTime;
 #pragma warning restore 0649
 
     private void Awake()
@@ -33,5 +34,12 @@ public class CombatPanel : MonoBehaviour
         {
             NetManager.Send((Int16)ProtocType.QuitCombat, new QuitCombat { });
         });
+    }
+
+    private void FixedUpdate()
+    {
+        var gameCenter = CombatGameCenter.instance;
+        Int32 time = (Int32)gameCenter.combatOperation.remainTime;
+        m_TxtTisTime.text = time.ToString();
     }
 }
