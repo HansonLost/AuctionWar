@@ -990,6 +990,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9295919f456f83f4eb82b9f6ccec1c86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_BtnQuest: {fileID: 7673000369459507547}
 --- !u!1 &4976778070226582165
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,6 +10,11 @@ public static class GameConst
         Combat,
     }
 
+    public enum CommandType : Int32
+    {
+        Log,
+    }
+
     public const float INTERVAL_HEART_BEAT = 5.0f;
     public const float INTERVAL_MAX_STOP_BEAT = 8.0f;
 

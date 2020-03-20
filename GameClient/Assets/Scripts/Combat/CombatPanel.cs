@@ -38,8 +38,8 @@ public class CombatPanel : MonoBehaviour
 
     private void FixedUpdate()
     {
-        var gameCenter = CombatGameCenter.instance;
-        Int32 time = (Int32)gameCenter.combatOperation.remainTime;
-        m_TxtTisTime.text = time.ToString();
+        ////var gameCenter = CombatGameCenter.instance;
+        ////Int32 time = (Int32)gameCenter.combatOperation.remainTime;
+        ////m_TxtTisTime.text = time.ToString();
     }
 }

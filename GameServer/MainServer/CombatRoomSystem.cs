@@ -192,7 +192,7 @@ namespace MainServer
             private Int32 m_NextSeq;
             private void SendFrame()
             {
-
+                // 打包帧包
                 var frame = new FramePackage
                 {
                     Seq = m_NextSeq,
@@ -207,11 +207,14 @@ namespace MainServer
                         Parameter = cmd.parm,
                     });
                 }
+                // 广播帧包
                 foreach (var pair in m_Players)
                 {
                     var cfd = pair.Key;
                     ServerNetManager.Send(cfd, (Int16)ProtocType.FramePackage, frame);
                 }
+                // 清空缓存的命令
+                m_Commands.Clear();
             }
 
             public class Player
