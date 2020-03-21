@@ -820,7 +820,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6949193555243381422}
-  - component: {fileID: 2171983888579248448}
   m_Layer: 5
   m_Name: PnlCombat
   m_TagString: Untagged
@@ -850,23 +849,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 113.6}
   m_Pivot: {x: 0.5, y: 1}
---- !u!114 &2171983888579248448
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6949193555243381423}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e301cc340a751cd408b13c71425b3836, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_BtnQuest: {fileID: 6949193555281758419}
-  m_BtnMarket: {fileID: 6949193555329955236}
-  m_BtnProcess: {fileID: 6949193554929028686}
-  m_BtnQuit: {fileID: 6949193553918723885}
-  m_TxtTisTime: {fileID: 2237134481982636718}
 --- !u!1 &6949193555281758417
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,13 +12,21 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
     protected override CombatFrameManager GetInstance() => this;
     protected override bool IsDonDestroyOnLoad() => false;
 
+    public Int32 seq { get; private set; }
+    public float logicTime { get { return seq * CommonConst.FRAME_INTERVAL; } }
+    public Action<Int32> onLogicUpdate { get; set; }
+    private Dictionary<GameConst.CommandType, ICmdListener> m_CmdListeners = new Dictionary<GameConst.CommandType, ICmdListener>();
+
+
     protected override void Awake()
     {
         base.Awake();
         FramePackageListener.instance.AddListener(this.UpdateFrame);
+        this.seq = 0;
     }
 
-    private Dictionary<GameConst.CommandType, ICmdListener> m_CmdListeners = new Dictionary<GameConst.CommandType, ICmdListener>();
+    public static float GetIntervalTime(Int32 beforeSeq, Int32 afterSeq) { return (afterSeq - beforeSeq) * CommonConst.FRAME_INTERVAL; }
+
     public void RegisterCommand(GameConst.CommandType type, ICmdListener listener)
     {
         if (m_CmdListeners.ContainsKey(type)) return;
@@ -35,6 +43,10 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
     }
     private void UpdateFrame(FramePackage framePackage)
     {
+        if (onLogicUpdate != null)
+            onLogicUpdate.Invoke(framePackage.Seq);
+
+        var seq = framePackage.Seq;
         var cmds = framePackage.Data;
         foreach (var cmd in cmds)
         {
@@ -46,4 +58,5 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
             }
         }
     }
+
 }

@@ -121,6 +121,65 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &493107113
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 493107114}
+  - component: {fileID: 493107115}
+  m_Layer: 5
+  m_Name: CombatView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &493107114
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 493107113}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1110147255}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &493107115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 493107113}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd98a777fadd72e4fb8aa16ff9918bf7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PanelPrefabs:
+    pnlCombat: {fileID: 6949193555243381423, guid: 20767f1b2842c07418725e36b9c85c97,
+      type: 3}
+    pnlQuest: {fileID: 4808011584225144779, guid: 99306985b88c83546aa23bc363d608cf,
+      type: 3}
+    pnlMarket: {fileID: 8889203046007441827, guid: 1ef379736729d2f4797ef2f134e62c5f,
+      type: 3}
+    pnlProcess: {fileID: 128226498022196625, guid: 00f1946a8de89e042989d47fd9bad4a2,
+      type: 3}
+    pnlAuction: {fileID: 6070937635444591555, guid: b2cef93d52280ad499ad7e1f39f94ab4,
+      type: 3}
 --- !u!1 &930967297
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +361,8 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0, y: 0, z: 0}
-  m_Children: []
+  m_Children:
+  - {fileID: 493107114}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -341,21 +401,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daeaf80121967fa4cb813a8867bca35a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Canvas: {fileID: 1110147255}
-  m_FixedPanel: {fileID: 6949193555243381423, guid: 20767f1b2842c07418725e36b9c85c97,
-    type: 3}
-  m_Panels:
-  - type: 0
-    prefab: {fileID: 4808011584225144779, guid: 99306985b88c83546aa23bc363d608cf,
-      type: 3}
-  - type: 1
-    prefab: {fileID: 8889203046007441827, guid: 1ef379736729d2f4797ef2f134e62c5f,
-      type: 3}
-  - type: 2
-    prefab: {fileID: 128226498022196625, guid: 00f1946a8de89e042989d47fd9bad4a2, type: 3}
-  - type: 3
-    prefab: {fileID: 6070937635444591555, guid: b2cef93d52280ad499ad7e1f39f94ab4,
-      type: 3}
 --- !u!4 &1515174347
 Transform:
   m_ObjectHideFlags: 0
