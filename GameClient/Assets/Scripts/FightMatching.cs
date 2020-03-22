@@ -58,6 +58,7 @@ public class FightMatching : MonoBehaviour
         }
         else
         {
+            MatchSystem.instance.randomSeed = combatMatchRes.Seed;
             SceneManager.LoadScene((Int32)GameConst.SceneType.Combat);
         }
     }

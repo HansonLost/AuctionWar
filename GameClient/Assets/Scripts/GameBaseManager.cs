@@ -4,10 +4,10 @@ using UnityEngine;
 /// <summary>
 /// MonoBehaviour 单例
 /// </summary>
-public abstract class GameBaseManager<T> : MonoBehaviour
-    where T : GameBaseManager<T>
+public abstract class GameBaseManager<TSelf> : MonoBehaviour
+    where TSelf : GameBaseManager<TSelf>
 {
-    public static T instance { get; private set; }
+    public static TSelf instance { get; private set; }
 
     protected virtual void Awake()
     {
@@ -23,6 +23,6 @@ public abstract class GameBaseManager<T> : MonoBehaviour
         if (this.IsDonDestroyOnLoad()) GameObject.DontDestroyOnLoad(this.gameObject);
     }
 
-    protected abstract T GetInstance();
+    protected abstract TSelf GetInstance();
     protected abstract bool IsDonDestroyOnLoad();
 }

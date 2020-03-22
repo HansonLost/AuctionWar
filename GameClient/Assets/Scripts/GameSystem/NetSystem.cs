@@ -56,7 +56,6 @@ public class NetSystem : MonoBehaviour
         });
         HeartbeatListener.instance.AddListener(delegate (Heartbeat heartbeat)
         {
-            Debug.Log("新的心跳");
             m_ReceiveBeat = Time.time;
         });
     }
@@ -112,7 +111,7 @@ public class NetSystem : MonoBehaviour
 
     private void SendHeartBeat()
     {
-        Debug.Log("发送心跳包");
+        Debug.Log("Send heart beat......");
         NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
         m_SendBeat = Time.time;
     }

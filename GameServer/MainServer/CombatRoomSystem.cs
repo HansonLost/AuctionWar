@@ -10,6 +10,8 @@ namespace MainServer
 {
     public class CombatRoomSystem
     {
+        private Random m_Random = new Random();
+
         private HashSet<Socket> m_MatchingSet = new HashSet<Socket>();
         private Dictionary<UInt32, CombatRoom> m_RoomSet = new Dictionary<UInt32, CombatRoom>();
         private Dictionary<Socket, UInt32> m_MapPlayerToRoom = new Dictionary<Socket, UInt32>();
@@ -62,6 +64,7 @@ namespace MainServer
                     ServerNetManager.Send(player, (Int16)ProtocType.CombatMatchRes, new CombatMatchRes
                     {
                         RoomId = res.roomId,
+                        Seed = m_Random.Next(),
                     });
                 }
                 m_RoomSet.Add(res.roomId, room);
