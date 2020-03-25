@@ -23,6 +23,7 @@ public class CombatManager : GameBaseManager<CombatManager>
     private bool m_IsChangeState;
     private Dictionary<StateType, IState> m_States = new Dictionary<StateType, IState>()
     {
+        { StateType.Awake, new AwakeState() },
         { StateType.Operation, new OperationState() },
         { StateType.Auction, new AuctionState() },
     };
@@ -32,13 +33,13 @@ public class CombatManager : GameBaseManager<CombatManager>
     {
         base.Awake();
         gameCenter = new CombatGameCenter(MatchSystem.instance.randomSeed);
-        gameCenter.ResetQuest();
+        gameCenter.Awake();
         foreach (var pair in m_States)
         {
             var state = pair.Value;
             m_TypeToState.Add(state.GetType(), state);
         }
-        m_StateType = StateType.Operation;
+        m_StateType = StateType.Awake;
         m_IsChangeState = true;
     }
     private void Start()
@@ -46,14 +47,27 @@ public class CombatManager : GameBaseManager<CombatManager>
         m_States[m_StateType].LoadResource();
 
         CombatFrameManager.instance.onLogicUpdate += this.UpdateLogicFrame;
-        CombatResultListener.instance.AddListener(this.QuitCombat);
+        CombatResultListener.instance.AddListener(this.CombatCheckout);
+        CmdClaimQuestListener.instance.AddListener(this.HandOutQuest);
         NetManager.Send((Int16)ProtocType.CombatReady, new CombatReady());
     }
     private void OnDestroy()
     {
-        CombatResultListener.instance.RemoveListener(this.QuitCombat);
+        CombatResultListener.instance.RemoveListener(this.CombatCheckout);
+        CmdClaimQuestListener.instance.RemoveListener(this.HandOutQuest);
     }
 
+    public T GetState<T>() where T : class, IState
+    {
+        Type parmType = typeof(T);
+        if (m_TypeToState.ContainsKey(parmType))
+        {
+            return (T)m_TypeToState[parmType];
+        }
+        return null;
+    }
+
+    // --- callback --- //
     private void UpdateLogicFrame(Int32 seq)
     {
         var state = m_States[m_StateType];
@@ -71,22 +85,60 @@ public class CombatManager : GameBaseManager<CombatManager>
         } 
         m_StateType = nextType;
     }
-    private void QuitCombat(CombatResult combatResult)
+    private void CombatCheckout(CombatResult combatResult)
     {
         SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
     }
-    public T GetState<T>() where T : class, IState
+    private void HandOutQuest(Int32 playerId, CmdClaimQuest cmdClaimQuest)
     {
-        Type parmType = typeof(T);
-        if (m_TypeToState.ContainsKey(parmType))
+        Int32 questIdx = cmdClaimQuest.Index;
+        bool isValid = CanPlayerHandOutQuest(playerId, questIdx);
+        if(isValid)
         {
-            return (T)m_TypeToState[parmType];
+            var quest = gameCenter.questMarket.HandOutQuest(questIdx);
+            var player = gameCenter.GetPlayer(playerId);
+            player.AddQuest(quest);
         }
-        return null;
+    }
+    
+    // --- command --- //
+    public void QuitCombat()
+    {
+        NetManager.Send((Int16)ProtocType.QuitCombat, new QuitCombat());
+    }
+    public void ClaimQuest(Int32 index)
+    {
+        Int32 selfId = MatchSystem.instance.selfId;
+        bool isValid = CanPlayerHandOutQuest(selfId, index);
+        if (isValid)
+        {
+            CombatFrameManager.instance.SendCommand(
+               GameConst.CommandType.ClaimQuest,
+               selfId,
+               new CmdClaimQuest
+               {
+                   Index = index,
+               });
+        }
+    }
+
+    // --- other --- //
+    private bool CanPlayerHandOutQuest(Int32 playerId, Int32 questIdx)
+    {
+        var player = gameCenter.GetPlayer(playerId);
+        if (player != null && player.IsFullQuest())
+            return false;
+
+        var state = gameCenter.questMarket.GetQuestState(questIdx);
+        if (state != CombatGameCenter.QuestMarket.QuestStateType.Normal)
+            return false;
+
+        return true;
     }
 
     public enum StateType
     {
+        Awake,      // 启动阶段
         Operation,  // 运营阶段
         Auction,    // 拍卖阶段
         End,        // 结束阶段
@@ -98,6 +150,23 @@ public class CombatManager : GameBaseManager<CombatManager>
         void LoadResource();
         void ReleaseResource();
         StateType LogicUpdate(Int32 seq);
+    }
+
+    public class AwakeState : IState
+    {
+        private bool m_IsLoad = false;
+        public void Reset(int seq) { }
+        public void LoadResource()
+        {
+            if (m_IsLoad) return;
+            m_IsLoad = true;
+            CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.UI, "Combat/PnlCombatView");
+        }
+        public void ReleaseResource() { }
+        public StateType LogicUpdate(int seq)
+        {
+            return StateType.Operation;
+        }
     }
 
     public class OperationState : IState

@@ -5,4 +5,5 @@ message CombatMatchRes
 {
 	uint32 roomId = 1;
 	int32 seed = 2;
+	int32 selfId = 3;
 }

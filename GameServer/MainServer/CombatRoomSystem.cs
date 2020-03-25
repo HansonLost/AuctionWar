@@ -56,6 +56,8 @@ namespace MainServer
             foreach (var res in resList)
             {
                 var room = new CombatRoom(res.roomId);
+                Int32 seed = m_Random.Next();
+                Int32 playerId = 1;
                 foreach (var player in res.players)
                 {
                     m_MatchingSet.Remove(player);
@@ -64,8 +66,10 @@ namespace MainServer
                     ServerNetManager.Send(player, (Int16)ProtocType.CombatMatchRes, new CombatMatchRes
                     {
                         RoomId = res.roomId,
-                        Seed = m_Random.Next(),
+                        Seed = seed,
+                        SelfId = playerId,
                     });
+                    playerId++;
                 }
                 m_RoomSet.Add(res.roomId, room);
             }
@@ -125,7 +129,7 @@ namespace MainServer
 
         public class CombatRoom
         {
-            public const Int32 MAX_PLAYER = 1;
+            public const Int32 MAX_PLAYER = 2;
             public const Int32 ID_PLAYER_ERROR = 0;
 
             public UInt32 roomId { get; private set; }

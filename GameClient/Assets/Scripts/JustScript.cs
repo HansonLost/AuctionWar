@@ -4,22 +4,20 @@ using UnityEngine;
 
 public class JustScript : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public GameObject target;
+    private ExButton m_ExButton;
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        m_ExButton = GetComponent<ExButton>();
+        target.SetActive(false);
+        m_ExButton.onFocusSpan.AddListener(() =>
         {
-            var target = DebugManager.instance;
-            if (target == null)
-                Debug.Log("target is null.");
-            else
-                Debug.Log("target is not null.");
-        }
+            target.SetActive(true);
+        });
+        m_ExButton.onExit.AddListener(() =>
+        {
+            target.SetActive(false);
+        });
     }
 }

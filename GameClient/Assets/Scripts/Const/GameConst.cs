@@ -13,6 +13,7 @@ public static class GameConst
     public enum CommandType : Int32
     {
         Log,
+        ClaimQuest,
     }
 
     public const float INTERVAL_HEART_BEAT = 5.0f;

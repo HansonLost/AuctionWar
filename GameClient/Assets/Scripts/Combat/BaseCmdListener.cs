@@ -44,3 +44,9 @@ public class CmdLogListener : BaseCmdListener<CmdLogListener, CmdLog>
     public override GameConst.CommandType GetCommandType() => GameConst.CommandType.Log;
     public override MessageParser<CmdLog> GetParser() => CmdLog.Parser;
 }
+
+public class CmdClaimQuestListener : BaseCmdListener<CmdClaimQuestListener, CmdClaimQuest>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.ClaimQuest;
+    public override MessageParser<CmdClaimQuest> GetParser() => CmdClaimQuest.Parser;
+}

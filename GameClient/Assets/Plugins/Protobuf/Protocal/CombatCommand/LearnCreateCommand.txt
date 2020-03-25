@@ -1,0 +1,4 @@
+1. Write proto file in prot-o dictionary;
+2. Compile by compiler.bat;
+3. Add enum in GameConst;
+4. Create listener class in BaseCmdListener.cs;

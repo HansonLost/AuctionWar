@@ -111,7 +111,6 @@ public class NetSystem : MonoBehaviour
 
     private void SendHeartBeat()
     {
-        Debug.Log("Send heart beat......");
         NetManager.Send((Int16)ProtocType.Heartbeat, new Heartbeat());
         m_SendBeat = Time.time;
     }
