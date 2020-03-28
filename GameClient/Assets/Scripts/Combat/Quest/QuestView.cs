@@ -62,7 +62,6 @@ public class QuestView : MonoBehaviour
         for (int i = 1; i <= 2; i++)
         {
             Text txt = root.Find(String.Format("PlayerQuests/Quest ({0})/Text", i)).GetComponent<Text>();
-            Debug.Log(txt.name);
             m_TxtPlayerQuests.Add(txt);
         }
         
@@ -90,12 +89,12 @@ public class QuestView : MonoBehaviour
     private void BindPlayerQuestsEvent()
     {
         var gameCenter = CombatManager.instance.gameCenter;
-        var selfPlayer = gameCenter.GetSelfPlayer();
+        var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
         selfPlayer.onAddQuest += AddPlayerQuest;
     }
     private void RemovePlayerQuestsEvent()
     {
-        var selfPlayer = this.gameCenter.GetSelfPlayer();
+        var selfPlayer = this.gameCenter.playerSet.GetSelfPlayer();
         selfPlayer.onAddQuest -= AddPlayerQuest;
     }
     private void RemoveQuestMarketEvent()
@@ -105,7 +104,7 @@ public class QuestView : MonoBehaviour
     private void InitPlayerQuests()
     {
         var gameCenter = CombatManager.instance.gameCenter;
-        var selfPlayer = gameCenter.GetSelfPlayer();
+        var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
         Int32 startIdx = 0;
         selfPlayer.ForEachQuest((CombatGameCenter.Quest quest) =>
         {

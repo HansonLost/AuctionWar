@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using HamPig.Network;
-using UnityEngine.SceneManagement;
 using System;
 using AuctionWar;
 
@@ -24,10 +23,6 @@ public class NetSystem : MonoBehaviour
 
         this.ListenProtoc();
         this.ConnectServer();
-    }
-    private void Start()
-    {
-        SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
     }
     private void Update()
     {
@@ -72,12 +67,14 @@ public class NetSystem : MonoBehaviour
             else
             {
                 Debug.Log("服务器拒绝连接");
+                CreateQuitPanel();
             }
         };
         NetManager.onForceClose += delegate ()
         {
             Debug.Log("远程强制关闭连接");
             this.Close(false);
+            CreateQuitPanel();
         };
 
         NetManager.Connect("127.0.0.1", 8888);
@@ -99,7 +96,6 @@ public class NetSystem : MonoBehaviour
         m_SendBeat = Time.time;
         m_ReceiveBeat = Time.time;
     }
-
     private void UpdateHeartBeat()
     {
         if(Time.time - m_ReceiveBeat > GameConst.INTERVAL_MAX_STOP_BEAT)
@@ -107,6 +103,21 @@ public class NetSystem : MonoBehaviour
             Debug.Log("心跳中止过长，强制关闭 Socket.");
             this.Close(true);
         }
+    }
+    private void CreateQuitPanel()
+    {
+        var go = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Top, "System/PnlComfirmView");
+        var wnd = go.GetComponent<ConfirmView>();
+        wnd.SetLogMessage("与服务器断开连接.");
+        wnd.onConfirm.AddListener(() => 
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        });
+
     }
 
     private void SendHeartBeat()

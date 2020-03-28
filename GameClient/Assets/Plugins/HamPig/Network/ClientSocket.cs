@@ -160,10 +160,9 @@ namespace HamPig.Network
                     socket.BeginDisconnect(false, DisconnectCallback, socket);
                 }
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
-                UnityEngine.Debug.Log("11111");
-                //Console.WriteLine(ex.ToString());
+                UnityEngine.Debug.Log(ex.ToString());
             }
         }
 

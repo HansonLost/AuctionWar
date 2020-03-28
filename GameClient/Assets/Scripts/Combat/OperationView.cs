@@ -18,6 +18,8 @@ public class OperationView : MonoBehaviour
     {
         BindButton();
         BindEvent();
+
+        SwitchOperationPanel(OperationType.Quest);
     }
     private void OnDestroy()
     {

@@ -19,8 +19,13 @@ public class CombatView : MonoBehaviour
     }
     private void Start()
     {
+        BindEvent();
         BindButton();
         InitView();
+    }
+    private void OnDestroy()
+    {
+        RemoveEvent();
     }
 
     private void BindReference()
@@ -49,7 +54,7 @@ public class CombatView : MonoBehaviour
     private void InitView()
     {
         var gameCenter = CombatManager.instance.gameCenter;
-        var player = gameCenter.GetSelfPlayer();
+        var player = gameCenter.playerSet.GetSelfPlayer();
         m_TxtMoney.text = player.money.ToString();
     }
     private CombatGameCenter.Player GetSelfPlayer()
@@ -57,7 +62,7 @@ public class CombatView : MonoBehaviour
         if (m_SelfPlayer == null)
         {
             var gameCenter = CombatManager.instance.gameCenter;
-            m_SelfPlayer = gameCenter.GetSelfPlayer();
+            m_SelfPlayer = gameCenter.playerSet.GetSelfPlayer();
         }
         return m_SelfPlayer;
     }

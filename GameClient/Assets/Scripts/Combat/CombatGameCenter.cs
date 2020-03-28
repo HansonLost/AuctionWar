@@ -7,39 +7,9 @@ using AuctionWar;
 // 网络同步数据
 public class CombatGameCenter
 {
-    private readonly Random m_Random;
-    public CombatGameCenter(Int32 seed)
-    {
-        m_Random = new Random(seed);
-    }
-    public void Awake()
-    {
-        questMarket.Reset(m_Random.Next());
-        ResetPlayer();
-    }
-
+    public PlayerSet playerSet { get; private set; } = new PlayerSet();
     public QuestMarket questMarket { get; private set; } = new QuestMarket();
-
-    private Dictionary<Int32, Player> m_Players = new Dictionary<int, Player>();
-    private Int32 m_SelfKey;
-    private void ResetPlayer()
-    {
-        m_Players.Clear();
-        for (int i = 1; i <= 2; i++)
-        {
-            m_Players.Add(i, new Player(i));
-        }
-        m_SelfKey = MatchSystem.instance.selfId;
-    }
-    public Player GetPlayer(Int32 id)
-    {
-        m_Players.TryGetValue(id, out Player res);
-        return res;
-    }
-    public Player GetSelfPlayer()
-    {
-        return GetPlayer(MatchSystem.instance.selfId);
-    }
+    public MaterialMarket materialMarket { get; private set; } = new MaterialMarket();
 
     public struct Quest
     {
@@ -121,13 +91,29 @@ public class CombatGameCenter
     public struct Material
     {
         public Type type { get; private set; }
+        public string name { get; private set; }
         public Int32 count { get; private set; }
+
+        private static Dictionary<CombatGameCenter.Material.Type, String> m_TypeToName = new Dictionary<CombatGameCenter.Material.Type, string>
+        {
+            { Type.Wood,            "木材" },
+            { Type.Iron,            "钢铁" },
+            { Type.Stone,           "石头" },
+            { Type.Fuel,            "燃料" },
+            { Type.Clay,            "粘土" },
+            { Type.Cotton,          "棉花" },
+            { Type.Plastic,         "塑料" },
+            { Type.LastMaterial,    "虚无" },
+        };
+
         public Material(Type type, Int32 count)
         {
             this.type = type;
             this.count = count;
+            this.name = m_TypeToName[type];
         }
-        public enum Type
+        public static readonly Material empty = new Material(Type.LastMaterial, 0);
+        public enum Type : Int32
         {
             Wood,   // 木材
             Iron,   // 钢铁
@@ -136,6 +122,7 @@ public class CombatGameCenter
             Clay,   // 粘土
             Cotton, // 棉花
             Plastic,// 塑料
+            LastMaterial,    // 中止类型
         }
     }
 
@@ -145,10 +132,11 @@ public class CombatGameCenter
         public Int32 id { get; private set; }
         public Int32 money { get; private set; }
         private List<Quest> m_Quests = new List<Quest>();
-        private List<Material> m_Stores = new List<Material>();
+        private List<Material> m_Storehouses = new List<Material>();
 
         public Action<Int32> onChangeMoney;
         public Action<Quest> onAddQuest;
+        public Action<Material> onAddMaterial;
 
         public Player(Int32 id)
         {
@@ -170,6 +158,10 @@ public class CombatGameCenter
         {
             return m_Quests.Count >= maxQuest;
         }
+        public bool IsFullStorehouse()
+        {
+            return m_Storehouses.Count >= GameConst.COUNT_STOREHOUSE;
+        }
         public void AddQuest(Quest quest)
         {
             if (IsFullQuest()) return;
@@ -179,11 +171,57 @@ public class CombatGameCenter
                 onAddQuest.Invoke(quest);
             }
         }
+        public void AddMaterial(Material mat)
+        {
+            if (IsFullStorehouse()) return;
+            m_Storehouses.Add(mat);
+            if(onAddMaterial != null)
+            {
+                onAddMaterial.Invoke(mat);
+            }
+        }
         public void ForEachQuest(Action<Quest> action)
         {
             foreach (var quest in m_Quests)
             {
                 action.Invoke(quest);
+            }
+        }
+        public void ForEachMaterial(Action<Material> action)
+        {
+            foreach (var mat in m_Storehouses)
+            {
+                action.Invoke(mat);
+            }
+        }
+    }
+
+    public class PlayerSet
+    {
+        private Dictionary<Int32, Player> m_Players = new Dictionary<int, Player>();
+
+        public void ResetPlayer()
+        {
+            m_Players.Clear();
+            for (int i = 1; i <= 2; i++)
+            {
+                m_Players.Add(i, new Player(i));
+            }
+        }
+        public Player GetPlayer(Int32 id)
+        {
+            m_Players.TryGetValue(id, out Player res);
+            return res;
+        }
+        public Player GetSelfPlayer()
+        {
+            return GetPlayer(MatchSystem.instance.selfId);
+        }
+        public void ForEachPlayer(Action<Player> action)
+        {
+            foreach (var pair in m_Players)
+            {
+                action.Invoke(pair.Value);
             }
         }
     }
@@ -196,10 +234,11 @@ public class CombatGameCenter
 
         public Action<Int32, Quest> onHandOutQuest;
 
-        public void Reset(Int32 seed)
+        public void RefreshQuest(Int32 seed)
         {
             Random random = new Random(seed);
             m_Quests.Clear();
+            m_QuestStates.Clear();
             for (int i = 0; i < m_MaxCountQuest; i++)
             {
                 Int32 key = random.Next();
@@ -237,6 +276,74 @@ public class CombatGameCenter
             HandOut,
             Finish,
         };
+    }
+
+    public class MaterialMarket
+    {
+        public const Int32 maxCountMarket = GameConst.COUNT_MARKET;
+        private List<Material> m_Materials = new List<Material>();
+        private List<StateType> m_MatStates = new List<StateType>();
+
+
+        /// <summary>
+        /// 买了第[0]个，花了[1]金币，材料为[3]
+        /// </summary>
+        public Action<Int32, Int32, Material> onBuyMaterial { get; set; }
+
+        public void RefreshMarket(Int32 playerId, Int32 seed)
+        {
+            // 原料市场是独立的，只刷新自己的市场
+            if (MatchSystem.instance.selfId != playerId) return;
+
+            Random random = new Random(seed);
+            m_Materials.Clear();
+            m_MatStates.Clear();
+            for (int i = 0; i < maxCountMarket; i++)
+            {
+                Material.Type type = (Material.Type)(random.Next() % (Int32)Material.Type.LastMaterial);
+                Int32 count = random.Next() % 10 + 1;   // 1 - 10
+                m_Materials.Add(new Material(type, count));
+                m_MatStates.Add(StateType.Sell);
+            }
+        }
+        public Material GetMaterial(Int32 idx)
+        {
+            return (IsValidIndex(idx) ? m_Materials[idx] : Material.empty);
+        }
+        public Int32 GetPrice(Material mat)
+        {
+            // 所有材料统一单价 1 金币
+            return mat.count * 1;
+        }
+        public Int32 GetPrice(Int32 idx)
+        {
+            return (IsValidIndex(idx) ? GetPrice(m_Materials[idx]) : 0);
+        }
+        public StateType GetState(Int32 idx)
+        {
+            return (IsValidIndex(idx) ? m_MatStates[idx] : StateType.None);
+        }
+        public Material BuyMaterial(Int32 idx)
+        {
+            if(IsValidIndex(idx)&& m_MatStates[idx] == StateType.Sell)
+            {
+                m_MatStates[idx] = StateType.SellOut;
+                var mat = m_Materials[idx];
+                if (onBuyMaterial != null)
+                    onBuyMaterial.Invoke(idx, GetPrice(mat), mat);
+                return mat;
+            }
+            return Material.empty;
+        }
+
+        private bool IsValidIndex(Int32 idx) { return (idx >= 0 && idx < m_Materials.Count); }
+
+        public enum StateType
+        {
+            Sell,       // 出售中
+            SellOut,    // 售空
+            None,
+        }
     }
 }
 

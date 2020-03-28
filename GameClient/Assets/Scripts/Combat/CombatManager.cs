@@ -32,8 +32,8 @@ public class CombatManager : GameBaseManager<CombatManager>
     protected override void Awake()
     {
         base.Awake();
-        gameCenter = new CombatGameCenter(MatchSystem.instance.randomSeed);
-        gameCenter.Awake();
+        gameCenter = new CombatGameCenter();
+        gameCenter.playerSet.ResetPlayer();
         foreach (var pair in m_States)
         {
             var state = pair.Value;
@@ -46,9 +46,14 @@ public class CombatManager : GameBaseManager<CombatManager>
     {
         m_States[m_StateType].LoadResource();
 
+        // system
         CombatFrameManager.instance.onLogicUpdate += this.UpdateLogicFrame;
         CombatResultListener.instance.AddListener(this.CombatCheckout);
+
+        // command
         CmdClaimQuestListener.instance.AddListener(this.HandOutQuest);
+        CmdBuyMaterialListener.instance.AddListener(this.BuyMaterial);
+
         NetManager.Send((Int16)ProtocType.CombatReady, new CombatReady());
     }
     private void OnDestroy()
@@ -96,8 +101,23 @@ public class CombatManager : GameBaseManager<CombatManager>
         if(isValid)
         {
             var quest = gameCenter.questMarket.HandOutQuest(questIdx);
-            var player = gameCenter.GetPlayer(playerId);
+            var player = gameCenter.playerSet.GetPlayer(playerId);
             player.AddQuest(quest);
+        }
+    }
+    private void BuyMaterial(Int32 playerId, CmdBuyMaterial cmdBuyMaterial)
+    {
+        Int32 selfId = MatchSystem.instance.selfId;
+        Int32 matIdx = cmdBuyMaterial.Index;
+        if (selfId != playerId) return;
+        bool isValid = CanPlayerBuyMaterial(playerId, matIdx);
+        if (isValid)
+        {
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            var mat = gameCenter.materialMarket.BuyMaterial(matIdx);
+            var price = gameCenter.materialMarket.GetPrice(matIdx);
+            player.AddMaterial(mat);
+            player.SetMoney(player.money - price);
         }
     }
     
@@ -121,11 +141,26 @@ public class CombatManager : GameBaseManager<CombatManager>
                });
         }
     }
+    public void TryBuyMaterial(Int32 idx)
+    {
+        Int32 selfId = MatchSystem.instance.selfId;
+        bool isValid = CanPlayerBuyMaterial(selfId, idx);
+        if (isValid)
+        {
+            CombatFrameManager.instance.SendCommand(
+                GameConst.CommandType.BuyMaterial,
+                selfId,
+                new CmdBuyMaterial
+                {
+                    Index = idx,
+                });
+        }
+    }
 
     // --- other --- //
     private bool CanPlayerHandOutQuest(Int32 playerId, Int32 questIdx)
     {
-        var player = gameCenter.GetPlayer(playerId);
+        var player = gameCenter.playerSet.GetPlayer(playerId);
         if (player != null && player.IsFullQuest())
             return false;
 
@@ -134,6 +169,16 @@ public class CombatManager : GameBaseManager<CombatManager>
             return false;
 
         return true;
+    }
+    private bool CanPlayerBuyMaterial(Int32 playerId, Int32 matId)
+    {
+        var player = gameCenter.playerSet.GetPlayer(playerId);
+        var price = gameCenter.materialMarket.GetPrice(matId);
+        var state = gameCenter.materialMarket.GetState(matId);
+        return (
+            player != null &&
+            state == CombatGameCenter.MaterialMarket.StateType.Sell &&
+            player.money >= price);
     }
 
     public enum StateType
@@ -176,7 +221,7 @@ public class CombatManager : GameBaseManager<CombatManager>
         private Int32 m_StartSeq;
         private readonly Int32 m_FreezenTime = 3;
         private bool m_IsFreezen;
-        private readonly Int32 m_OpTime = 5;
+        private readonly Int32 m_OpTime = GameConst.COMBAT_OPERATION_TIME;
         private Int32 m_CurrTime;
 
         public Action<Int32> onChangeFreezenTime;
@@ -187,6 +232,8 @@ public class CombatManager : GameBaseManager<CombatManager>
             m_StartSeq = seq;
             m_IsFreezen = true;
             m_CurrTime = 0;
+
+            RefreshGameCenter();
         }
         public void LoadResource()
         {
@@ -230,6 +277,24 @@ public class CombatManager : GameBaseManager<CombatManager>
                 }
             }
             return (m_CurrTime >= m_OpTime ? StateType.Auction : StateType.Operation);
+        }
+
+        private void RefreshGameCenter()
+        {
+            var gameCenter = CombatManager.instance.gameCenter;
+            Int32 seed = MatchSystem.instance.random.Next();
+            System.Random random = new System.Random(seed);
+            gameCenter.questMarket.RefreshQuest(random.Next());
+            for (int playerId = 1; playerId <= GameConst.COMBAT_PLAYER_COUNT; playerId++)
+            {
+                gameCenter.materialMarket.RefreshMarket(playerId, random.Next());
+            }
+
+            // 根据规则，每人每回合会获取投资金
+            gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
+            {
+                player.SetMoney(player.money + 100);
+            });
         }
     }
 

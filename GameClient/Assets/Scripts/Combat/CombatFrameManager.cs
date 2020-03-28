@@ -43,9 +43,6 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
     }
     private void UpdateFrame(FramePackage framePackage)
     {
-        if (onLogicUpdate != null)
-            onLogicUpdate.Invoke(framePackage.Seq);
-
         var seq = framePackage.Seq;
         var cmds = framePackage.Data;
         foreach (var cmd in cmds)
@@ -57,6 +54,9 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
                 
             }
         }
+
+        if (onLogicUpdate != null)
+            onLogicUpdate.Invoke(framePackage.Seq);
     }
 
 }

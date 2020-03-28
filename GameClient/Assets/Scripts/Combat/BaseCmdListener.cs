@@ -50,3 +50,9 @@ public class CmdClaimQuestListener : BaseCmdListener<CmdClaimQuestListener, CmdC
     public override GameConst.CommandType GetCommandType() => GameConst.CommandType.ClaimQuest;
     public override MessageParser<CmdClaimQuest> GetParser() => CmdClaimQuest.Parser;
 }
+
+public class CmdBuyMaterialListener : BaseCmdListener<CmdBuyMaterialListener, CmdBuyMaterial>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.BuyMaterial;
+    public override MessageParser<CmdBuyMaterial> GetParser() => CmdBuyMaterial.Parser;
+}

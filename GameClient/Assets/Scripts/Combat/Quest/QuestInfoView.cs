@@ -16,16 +16,6 @@ public class QuestInfoView : MonoBehaviour
     private Text m_TxtReward;
 
     private List<GameObject> m_Materials = new List<GameObject>();
-    private Dictionary<CombatGameCenter.Material.Type, String> m_TypeToName = new Dictionary<CombatGameCenter.Material.Type, string>
-    {
-        { CombatGameCenter.Material.Type.Wood,      "木材" },
-        { CombatGameCenter.Material.Type.Iron,      "钢铁" },
-        { CombatGameCenter.Material.Type.Stone,     "石头" },
-        { CombatGameCenter.Material.Type.Fuel,      "燃料" },
-        { CombatGameCenter.Material.Type.Clay,      "粘土" },
-        { CombatGameCenter.Material.Type.Cotton,    "棉花" },
-        { CombatGameCenter.Material.Type.Plastic,   "塑料" },
-    };
 
     private void Awake()
     {
@@ -63,11 +53,10 @@ public class QuestInfoView : MonoBehaviour
 
         foreach (var m in materials)
         {
-            String name = m_TypeToName[m.type];
             var go = Instantiate(m_MaterialPrefab, m_MaterialRoot) as GameObject;
             var txtName = go.transform.Find("TxtName").GetComponent<Text>();
             var txtCount = go.transform.Find("TxtCount").GetComponent<Text>();
-            txtName.text = name;
+            txtName.text = m.name;
             txtCount.text = String.Format("× {0}", m.count);
             m_Materials.Add(go);
         }
