@@ -5,7 +5,7 @@ using HamPig.Network;
 using AuctionWar;
 
 // 网络同步数据
-public class CombatGameCenter
+public partial class CombatGameCenter
 {
     public PlayerSet playerSet { get; private set; } = new PlayerSet();
     public QuestMarket questMarket { get; private set; } = new QuestMarket();
@@ -131,6 +131,8 @@ public class CombatGameCenter
         public const Int32 maxQuest = 2;
         public Int32 id { get; private set; }
         public Int32 money { get; private set; }
+        public ProcessFactory processFactory { get; private set; } = new ProcessFactory();
+
         private List<Quest> m_Quests = new List<Quest>();
         private List<Material> m_Storehouses = new List<Material>();
 
@@ -166,6 +168,7 @@ public class CombatGameCenter
         {
             if (IsFullQuest()) return;
             m_Quests.Add(quest);
+            processFactory.AddQuest(quest);
             if (onAddQuest != null)
             {
                 onAddQuest.Invoke(quest);

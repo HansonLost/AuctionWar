@@ -26,4 +26,5 @@ public static class GameConst
     public const Int32 COUNT_MARKET = 3;            // 原料市场可出售总数量
     public const Int32 COUNT_STOREHOUSE = 4;        // 普通状态下，玩家仓库数量
     public const Int32 COMBAT_VAST = 100;           // 投资金额
+    public const Int32 COUNT_CLAIM_QUEST = 2;       // 任务最大领取数量
 }
