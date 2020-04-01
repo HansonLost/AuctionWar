@@ -43,7 +43,7 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
     }
     private void UpdateFrame(FramePackage framePackage)
     {
-        var seq = framePackage.Seq;
+        seq = framePackage.Seq;
         var cmds = framePackage.Data;
         foreach (var cmd in cmds)
         {
@@ -51,7 +51,6 @@ public class CombatFrameManager : GameBaseManager<CombatFrameManager>
             {
                 var listener = m_CmdListeners[(GameConst.CommandType)cmd.CommandId];
                 listener.Invoke(cmd.PlayerId, cmd.Parameter);
-                
             }
         }
 

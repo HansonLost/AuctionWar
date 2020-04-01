@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4894404852539519267}
   - component: {fileID: 2481231465655322598}
   - component: {fileID: 2933522961549127170}
+  - component: {fileID: 4920463965106771426}
   m_Layer: 5
   m_Name: Storehouse
   m_TagString: Untagged
@@ -75,6 +76,22 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4920463965106771426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1185282543989683795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92ba94a7dc5c4284e820db4876b124b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PrefabSelector: {fileID: 3706820979848235424, guid: a6b5c4834c5df5b47a6d1f6f174463c6,
+    type: 3}
+  m_TxtMatName: {fileID: 2893382410410596602}
+  m_TxtMatCount: {fileID: 4376410904819222636}
 --- !u!1 &3332126759410454205
 GameObject:
   m_ObjectHideFlags: 0

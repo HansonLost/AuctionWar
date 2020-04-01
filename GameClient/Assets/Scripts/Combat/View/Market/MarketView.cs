@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class MarketView : MonoBehaviour
 {
     public CombatGameCenter gameCenter { get{ return CombatManager.instance.gameCenter; } }
+    private Button m_BtnRefresh;
     private List<SellBlock> m_PnlSell = new List<SellBlock>();
     private List<Storehouse> m_PnlStorehouses = new List<Storehouse>();
 
@@ -28,6 +29,12 @@ public class MarketView : MonoBehaviour
     private void BindReference()
     {
         var root = this.transform;
+        m_BtnRefresh = root.Find("BtnRefresh").GetComponent<Button>();
+        m_BtnRefresh.onClick.AddListener(() =>
+        {
+            var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+            state.TryRefreshMarket();
+        });
         // 商店面板
         for (int i = 1; i <= GameConst.COUNT_MARKET; i++)
         {
@@ -55,6 +62,10 @@ public class MarketView : MonoBehaviour
         var player = gameCenter.playerSet.GetPlayer(selfId);
         player.onAddMaterial += this.AddMaterial;
         gameCenter.materialMarket.onBuyMaterial += this.BuyMaterial;
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onRefreshMarket += this.RefreshMarket;
+        state.onPutInMaterial += this.UpdateStorehouse;
     }
     private void RemoveEvent()
     {
@@ -62,6 +73,10 @@ public class MarketView : MonoBehaviour
         var player = gameCenter.playerSet.GetPlayer(selfId);
         player.onAddMaterial -= this.AddMaterial;
         gameCenter.materialMarket.onBuyMaterial -= this.BuyMaterial;
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onRefreshMarket -= this.RefreshMarket;
+        state.onPutInMaterial -= this.UpdateStorehouse;
     }
     private void InitSellPanel()
     {
@@ -107,6 +122,44 @@ public class MarketView : MonoBehaviour
     private void BuyMaterial(Int32 idx, Int32 price, CombatGameCenter.Material mat)
     {
         m_PnlSell[idx].btnBuy.interactable = false;
+    }
+    private void RefreshMarket(Int32 playerId)
+    {
+        if (playerId != MatchSystem.instance.selfId) return;
+        for (int i = 0; i < m_PnlSell.Count; i++)
+        {
+            var block = m_PnlSell[i];
+            block.btnBuy.interactable = true;
+            block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
+            block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
+            Int32 idx = i;  // 使用 i 的话，所有值都编程一样的。
+            block.btnBuy.onClick.AddListener(() =>
+            {
+                CombatManager.instance.TryBuyMaterial(idx);
+            });
+        }
+    }
+    private void UpdateStorehouse(Int32 playerId)
+    {
+        if (playerId != MatchSystem.instance.selfId) return;
+        var player = gameCenter.playerSet.GetSelfPlayer();
+        Int32 startIdx = 0;
+        player.ForEachMaterial((CombatGameCenter.Material mat) =>
+        {
+            if (startIdx < m_PnlStorehouses.Count)
+            {
+                var sh = m_PnlStorehouses[startIdx];
+                sh.txtMatName.text = mat.name;
+                sh.txtMatCount.text = mat.count.ToString();
+            }
+            startIdx++;
+        });
+        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        {
+            var sh = m_PnlStorehouses[i];
+            sh.txtMatName.text = "空闲";
+            sh.txtMatCount.text = "0";
+        }
     }
 
 

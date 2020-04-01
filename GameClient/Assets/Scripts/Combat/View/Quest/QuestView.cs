@@ -18,14 +18,6 @@ public class QuestView : MonoBehaviour
     {
         BindReference();
         InitPlayerQuests();
-
-        //m_BtnQuest.onClick.AddListener(() =>
-        //{
-        //    CombatFrameManager.instance.SendCommand(GameConst.CommandType.Log, 1, new CmdLog
-        //    {
-        //        Information = "我嬲你妈妈别咧",
-        //    });
-        //});
     }
     private void Start()
     {
@@ -33,15 +25,17 @@ public class QuestView : MonoBehaviour
         InitQuest();
         BindQuestButton();
         BindPlayerQuestsEvent();
-        //CmdLogListener.instance.AddListener((Int32 playerId, CmdLog cmdLog) => 
-        //{
-        //    Debug.Log(String.Format("玩家{0}说：{1}", playerId, cmdLog.Information));
-        //});
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onFinishProcess += this.UpdatePlayerQuest;
     }
     private void OnDestroy()
     {
         RemovePlayerQuestsEvent();
         RemoveQuestMarketEvent();
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onFinishProcess += this.UpdatePlayerQuest;
     }
 
     private void BindReference()
@@ -150,6 +144,26 @@ public class QuestView : MonoBehaviour
             }
         }
     }
+    private void UpdatePlayerQuest(Int32 playerId)
+    {
+        if (playerId != MatchSystem.instance.selfId) return;
+        var player = gameCenter.playerSet.GetSelfPlayer();
+        for (int i = 0; i < m_TxtPlayerQuests.Count; i++)
+        {
+            Text txt = m_TxtPlayerQuests[i];
+            var quest = player.GetQuest(i);
+            if (quest.IsEmpty())
+            {
+                txt.text = "";
+            }
+            else
+            {
+                txt.text = quest.name;
+            }
+
+        }
+    }
+
     private void HandOutQuest(Int32 questIdx, CombatGameCenter.Quest quest)
     {
         if(questIdx >= 0 && questIdx < m_QuestButtons.Count)

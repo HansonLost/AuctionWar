@@ -8,7 +8,7 @@ using HamPig.Network;
 using AuctionWar;
 
 // 对战整体流程框架
-public class CombatManager : GameBaseManager<CombatManager>
+public partial class CombatManager : GameBaseManager<CombatManager>
 {
     protected override CombatManager GetInstance() => this;
     protected override bool IsDonDestroyOnLoad() => false;
@@ -211,90 +211,6 @@ public class CombatManager : GameBaseManager<CombatManager>
         public StateType LogicUpdate(int seq)
         {
             return StateType.Operation;
-        }
-    }
-
-    public class OperationState : IState
-    {
-        private GameObject m_View;
-
-        private Int32 m_StartSeq;
-        private readonly Int32 m_FreezenTime = 3;
-        private bool m_IsFreezen;
-        private readonly Int32 m_OpTime = GameConst.COMBAT_OPERATION_TIME;
-        private Int32 m_CurrTime;
-
-        public Action<Int32> onChangeFreezenTime;
-        public Action<Int32> onChangeCountdownTime;
-        
-        public void Reset(Int32 seq)
-        {
-            m_StartSeq = seq;
-            m_IsFreezen = true;
-            m_CurrTime = 0;
-
-            RefreshGameCenter();
-        }
-        public void LoadResource()
-        {
-            if (m_View != null) return;
-            m_View = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Normal, "Combat/PnlOperationView");
-        }
-        public void ReleaseResource()
-        {
-            if (m_View == null) return;
-            GameObject.Destroy(m_View);
-            m_View = null;
-        }
-        public StateType LogicUpdate(Int32 seq)
-        {
-            float dt = CombatFrameManager.GetIntervalTime(m_StartSeq, seq);
-            Int32 dtInt = (Int32)dt;
-            if (m_IsFreezen)
-            {
-                if(dtInt < m_FreezenTime)
-                {
-                    m_CurrTime = dtInt;
-                    if(onChangeFreezenTime != null)
-                        onChangeFreezenTime.Invoke(m_FreezenTime - m_CurrTime);
-                }
-                else
-                {
-                    m_IsFreezen = false;
-                    m_CurrTime = 0;
-                    m_StartSeq = seq;
-                    if(onChangeCountdownTime != null)
-                        onChangeCountdownTime.Invoke(m_OpTime - m_CurrTime);
-                }
-            }
-            else
-            {
-                if(dtInt != m_CurrTime)
-                {
-                    m_CurrTime = dtInt;
-                    if(onChangeCountdownTime != null)
-                        onChangeCountdownTime.Invoke(m_OpTime - m_CurrTime);
-                }
-            }
-            return (m_CurrTime >= m_OpTime ? StateType.Auction : StateType.Operation);
-        }
-
-        private void RefreshGameCenter()
-        {
-            var gameCenter = CombatManager.instance.gameCenter;
-            Int32 seed = MatchSystem.instance.random.Next();
-            System.Random random = new System.Random(seed);
-            gameCenter.questMarket.RefreshQuest(random.Next());
-            for (int playerId = 1; playerId <= GameConst.COMBAT_PLAYER_COUNT; playerId++)
-            {
-                gameCenter.materialMarket.RefreshMarket(playerId, random.Next());
-            }
-
-            // 根据规则，每人每回合会获取投资金
-            gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
-            {
-                player.SetMoney(player.money + 100);
-            });
         }
     }
 

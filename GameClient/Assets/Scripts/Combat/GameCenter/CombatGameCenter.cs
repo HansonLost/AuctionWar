@@ -105,6 +105,7 @@ public partial class CombatGameCenter
             { Type.Plastic,         "塑料" },
             { Type.LastMaterial,    "虚无" },
         };
+        public static readonly Material empty = new Material(Type.LastMaterial, 0);
 
         public Material(Type type, Int32 count)
         {
@@ -112,7 +113,7 @@ public partial class CombatGameCenter
             this.count = count;
             this.name = m_TypeToName[type];
         }
-        public static readonly Material empty = new Material(Type.LastMaterial, 0);
+        public bool IsEmpty() { return this.type == Type.LastMaterial; }
         public enum Type : Int32
         {
             Wood,   // 木材
@@ -164,14 +165,57 @@ public partial class CombatGameCenter
         {
             return m_Storehouses.Count >= GameConst.COUNT_STOREHOUSE;
         }
+        public Material GetStorehouse(Int32 idx)
+        {
+            if(Utility.IsInRange(idx, 0, m_Storehouses.Count - 1))
+            {
+                return m_Storehouses[idx];
+            }
+            return Material.empty;
+        }
+        public void SetStorehouse(Int32 idx, Material mat)
+        {
+            if (Utility.IsInRange(idx, 0, m_Storehouses.Count - 1) &&
+                mat.type != Material.Type.LastMaterial &&
+                mat.count > 0)
+            {
+                m_Storehouses[idx] = mat;
+            }
+        }
+        public void ClearStorehouse(Int32 idx)
+        {
+            if(Utility.IsInRange(idx, 0, m_Storehouses.Count - 1))
+            {
+                m_Storehouses.RemoveAt(idx);
+            }
+        }
+        public void AddStorehouse(Material mat)
+        {
+            if (!IsFullStorehouse())
+            {
+                m_Storehouses.Add(mat);
+            }
+        }
+        public Quest GetQuest(Int32 idx)
+        {
+            if (Utility.IsInRange(idx, 0, m_Quests.Count - 1))
+            {
+                return m_Quests[idx];
+            }
+            return Quest.empty;
+        }
         public void AddQuest(Quest quest)
         {
             if (IsFullQuest()) return;
             m_Quests.Add(quest);
             processFactory.AddQuest(quest);
-            if (onAddQuest != null)
+            onAddQuest?.Invoke(quest);
+        }
+        public void RemoveQuest(Int32 idx)
+        {
+            if(Utility.IsInRange(idx, 0, m_Quests.Count - 1))
             {
-                onAddQuest.Invoke(quest);
+                m_Quests.RemoveAt(idx);
             }
         }
         public void AddMaterial(Material mat)

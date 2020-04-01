@@ -8,7 +8,11 @@ public class ProcessView : MonoBehaviour
 {
     protected CombatGameCenter gameCenter { get { return CombatManager.instance.gameCenter; } }
     protected CombatGameCenter.Player selfPlayer { get { return gameCenter.playerSet.GetSelfPlayer(); } }
+
     private List<QuestPanel> m_QuestPanels = new List<QuestPanel>();
+    private List<ProcessBlockView> m_PnlProcessBlocks = new List<ProcessBlockView>();
+    private List<ProcessStorehouseView> m_PnlStorehouses = new List<ProcessStorehouseView>();
+
 
     private void Awake()
     {
@@ -19,6 +23,7 @@ public class ProcessView : MonoBehaviour
     {
         BindEvent();
         UpdateQuestPanel();
+        UpdateStorehousePanel();
     }
     private void OnDestroy()
     {
@@ -44,37 +49,92 @@ public class ProcessView : MonoBehaviour
             questPanel.txtTotalTime = root.Find(String.Format("{0}/TxtTotalTime", path)).GetComponent<Text>();
             m_QuestPanels.Add(questPanel);
         }
+        // 任务面板 - 新版
+        for (int i = 1; i <= GameConst.COUNT_CLAIM_QUEST; i++)
+        {
+            var go = root.Find(String.Format("Quest/ImgQuest ({0})", i));
+            var view = go.GetComponent<ProcessBlockView>();
+            view.Init(i - 1);
+            m_PnlProcessBlocks.Add(view);
+        }
+        // 仓库面板
+        for (int i = 1; i <= GameConst.COUNT_STOREHOUSE; i++)
+        {
+            var go = root.Find(String.Format("StoreHouse/Storehouse ({0})", i));
+            var view = go.GetComponent<ProcessStorehouseView>();
+            view.Init(this, i - 1);
+            m_PnlStorehouses.Add(view);
+        }
     }
     private void BindEvent()
     {
         var player = this.selfPlayer;
         player.processFactory.onAddMaterial += OnUpdateQuestPanel;
         player.onAddQuest += OnAddUpdate;
+        selfPlayer.onAddMaterial += this.BuyMaterial;
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onPutInMaterial += this.UpdateAllUI;
+        state.onFinishProcess += this.UpdateAllUI;
+        state.onChangeProcess += this.UpdateAllUI;
     }
     private void RemoveEvent()
     {
         var player = this.selfPlayer;
         player.processFactory.onAddMaterial -= OnUpdateQuestPanel;
         player.onAddQuest -= OnAddUpdate;
+        selfPlayer.onAddMaterial -= this.BuyMaterial;
+
+        var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onPutInMaterial -= this.UpdateAllUI;
+        state.onFinishProcess -= this.UpdateAllUI;
+        state.onChangeProcess -= this.UpdateAllUI;
     }
     private void UpdateQuestPanel()
     {
-        for (int i = 0; i < m_QuestPanels.Count; i++)
+        for (int i = 0; i < m_PnlProcessBlocks.Count; i++)
         {
             var block = selfPlayer.processFactory.GetProcessBlock(i);
-            var panel = m_QuestPanels[i];
-            if(block != null)
+            var view = m_PnlProcessBlocks[i];
+            if (block != null)
             {
                 Int32 runTime = 0;
+                Int32 CurrSeq = CombatFrameManager.instance.seq;
                 if (block.isRun)
-                    runTime = (Int32)CombatFrameManager.GetIntervalTime(block.startSeq, CombatFrameManager.instance.seq);
-                panel.Update(block.quest, runTime);
+                    runTime = (Int32)CombatFrameManager.GetIntervalTime(block.startSeq, CurrSeq);
+                view.ResetQuest(block.quest);
+                view.UpdateQuest(block.matBuffer, runTime);
             }
             else
             {
-                panel.Clear();
+                view.ResetQuest(CombatGameCenter.Quest.empty);
             }
+        }
+    }
+    private void UpdateStorehousePanel()
+    {
+        Int32 startIdx = 0;
+        selfPlayer.ForEachMaterial((CombatGameCenter.Material mat) =>
+        {
+            if (Utility.IsInRange(startIdx, 0, m_PnlStorehouses.Count - 1))
+            {
+                var sh = m_PnlStorehouses[startIdx];
+                sh.RefreshView(mat);
+            }
+            startIdx++;
+        });
+        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        {
+            var sh = m_PnlStorehouses[i];
+            sh.RefreshView(CombatGameCenter.Material.empty);
+        }
+    }
 
+    public void SetQuestReceiverActive(bool isActive)
+    {
+        foreach (var view in m_PnlProcessBlocks)
+        {
+            view.SetReceiverPanelActive(isActive);
         }
     }
 
@@ -86,6 +146,18 @@ public class ProcessView : MonoBehaviour
     private void OnAddUpdate(CombatGameCenter.Quest quest)
     {
         UpdateQuestPanel();
+    }
+    private void BuyMaterial(CombatGameCenter.Material mat)
+    {
+        UpdateStorehousePanel();
+    }
+    private void UpdateAllUI(Int32 playerId)
+    {
+        if(playerId == MatchSystem.instance.selfId)
+        {
+            UpdateQuestPanel();
+            UpdateStorehousePanel();
+        }
     }
 
     public class QuestPanel

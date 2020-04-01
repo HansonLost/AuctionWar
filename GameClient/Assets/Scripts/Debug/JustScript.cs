@@ -1,28 +1,38 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class JustScript : MonoBehaviour
+    , IPointerEnterHandler
 {
-    public GameObject target;
+    public GameObject selector;
 
-    private bool m_IsBuilt;
+    private bool m_IsSelect = false;
 
-    //private void Start()
-    //{
-    //    Instantiate(target, this.transform);
-    //    Debug.Log("Finish instantiate.");
-    //}
-
-
-    private void Update()
+    public void OnPointerEnter(PointerEventData eventData)
     {
-        
-        if (!m_IsBuilt)
+        if (m_IsSelect) return;
+        m_IsSelect = true;
+        var instance = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.UI, selector);
+        instance.GetComponent<RectTransform>().anchoredPosition3D = GetComponent<RectTransform>().anchoredPosition3D;
+        var drager = instance.GetComponent<DragSelector>();
+        drager.onSelect.AddListener((GameObject go) => 
         {
-            Instantiate(target, this.transform);
-            Debug.Log("Finish instantiate.");
-            m_IsBuilt = true;
-        }
+            m_IsSelect = false;
+            LogGameObject(go);
+        });
+        drager.onCancel.AddListener(() =>
+        {
+            m_IsSelect = false;
+            Debug.Log("Cancel select.");
+        });
+
+    }
+
+    private void LogGameObject(GameObject go)
+    {
+        string name = (go != null ? go.name : "(None)");
+        Debug.Log(name);
     }
 }
