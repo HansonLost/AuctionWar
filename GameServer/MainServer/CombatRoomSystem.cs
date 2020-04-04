@@ -129,7 +129,7 @@ namespace MainServer
 
         public class CombatRoom
         {
-            public const Int32 MAX_PLAYER = 2;
+            public const Int32 MAX_PLAYER = 1;
             public const Int32 ID_PLAYER_ERROR = 0;
 
             public UInt32 roomId { get; private set; }

@@ -70,9 +70,12 @@ public class AuctionView : MonoBehaviour
 
     private void UpdateItem()
     {
-        var item = gameCenter.auction.GetCurrentItem();
-        m_TxtItemName.text = item.GetName();
-        m_TxtPrice.text = gameCenter.auction.GetCurrentPrice().ToString();
+        var prop = gameCenter.auction.GetCurrentProp();
+        if(prop != null)
+        {
+            m_TxtItemName.text = prop.GetName();
+            m_TxtPrice.text = gameCenter.auction.GetCurrentPrice().ToString();
+        }
         foreach (var btn in m_RisePrice)
         {
             btn.interactable = true;

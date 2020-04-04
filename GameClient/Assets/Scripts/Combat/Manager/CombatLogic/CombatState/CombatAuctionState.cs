@@ -77,7 +77,7 @@ public class AuctionState : CombatManager.IState
                 var player = auction.currentCaller;
                 var price = auction.GetCurrentPrice();
                 player.SetMoney(player.money - price);
-                ReceiveAuctionItem(player.id, auction.GetCurrentItem());
+                ReceiveAuctionItem(player.id, auction.GetCurrentProp());
                 auction.Next();
                 m_StartSeq = seq;
                 onNextAuctionItem?.Invoke();
@@ -134,9 +134,9 @@ public class AuctionState : CombatManager.IState
     }
     
     // --- other --- //
-    private void ReceiveAuctionItem(Int32 playerId, GameItem item)
+    private void ReceiveAuctionItem(Int32 playerId, CombatProp prop)
     {
-        Debug.Log(String.Format("玩家{0}获得道具{1}", playerId, item.GetName()));
+        Debug.Log(String.Format("玩家{0}获得道具{1}", playerId, prop.GetName()));
     }
 }
 

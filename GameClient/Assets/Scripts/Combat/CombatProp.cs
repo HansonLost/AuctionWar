@@ -6,6 +6,7 @@ public struct PropInfo
 {
     public Int32 id;
     public string name;
+    public Int32 upsetPrice;
     public Type script;
 }
 
@@ -17,8 +18,18 @@ public class CombatPropHelper
         {
             Random random = new Random(seed);
             Int32 index = random.Next() % tblProp.Count;
-            var type = tblProp[index].script;
-            return Activator.CreateInstance(type) as CombatProp;
+            var info = tblProp[index];
+            return Activator.CreateInstance(info.script, info) as CombatProp;
+        }
+        return null;
+    }
+    public static CombatProp CreateProp(Int32 id)
+    {
+        Int32 idx = id - 1;
+        if(Utility.IsInRange(idx, 0, tblProp.Count - 1))
+        {
+            var info = tblProp[idx];
+            return Activator.CreateInstance(info.script, info) as CombatProp;
         }
         return null;
     }
@@ -29,12 +40,14 @@ public class CombatPropHelper
         {
             id = 1,
             name = "古老皇冠",
+            upsetPrice = 3000,
             script = typeof(PropWin),
         },
         new PropInfo
         {
             id = 2,
             name = "仓库",
+            upsetPrice = 30,
             script = typeof(PropStorehouse),
         },
     };
@@ -49,9 +62,17 @@ public abstract class CombatProp
     {
         this.info = info;
     }
+    public Int32 GetId()
+    {
+        return info.id;
+    }
     public string GetName()
     {
         return info.name;
+    }
+    public Int32 GetUpsetPrice()
+    {
+        return info.upsetPrice;
     }
 
     public virtual void OnCollect(CombatGameCenter.Player player)

@@ -35,7 +35,7 @@ public class QuestView : MonoBehaviour
         RemoveQuestMarketEvent();
 
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
-        state.onFinishProcess += this.UpdatePlayerQuest;
+        state.onFinishProcess -= this.UpdatePlayerQuest;
     }
 
     private void BindReference()
