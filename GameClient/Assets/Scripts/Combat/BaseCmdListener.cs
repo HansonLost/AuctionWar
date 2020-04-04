@@ -56,3 +56,27 @@ public class CmdBuyMaterialListener : BaseCmdListener<CmdBuyMaterialListener, Cm
     public override GameConst.CommandType GetCommandType() => GameConst.CommandType.BuyMaterial;
     public override MessageParser<CmdBuyMaterial> GetParser() => CmdBuyMaterial.Parser;
 }
+
+public class CmdAuctionRisePriceListener : BaseCmdListener<CmdAuctionRisePriceListener, CmdAuctionRisePrice>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.AuctionRisePrice;
+    public override MessageParser<CmdAuctionRisePrice> GetParser() => CmdAuctionRisePrice.Parser;
+}
+
+public class CmdPutInMaterialListener : BaseCmdListener<CmdPutInMaterialListener, CmdPutInMaterial>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.PutInMaterial;
+    public override MessageParser<CmdPutInMaterial> GetParser() => CmdPutInMaterial.Parser;
+}
+
+public class CmdRefreshMarketListener : BaseCmdListener<CmdRefreshMarketListener, CmdRefreshMarket>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.RefreshMarket;
+    public override MessageParser<CmdRefreshMarket> GetParser() => CmdRefreshMarket.Parser;
+}
+
+public class CmdSellMaterialListener : BaseCmdListener<CmdSellMaterialListener, CmdSellMaterial>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.SellMaterial;
+    public override MessageParser<CmdSellMaterial> GetParser() => CmdSellMaterial.Parser;
+}

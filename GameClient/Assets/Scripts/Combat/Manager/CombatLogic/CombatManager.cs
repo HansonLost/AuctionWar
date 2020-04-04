@@ -213,33 +213,4 @@ public partial class CombatManager : GameBaseManager<CombatManager>
             return StateType.Operation;
         }
     }
-
-    public class AuctionState : IState
-    {
-        private GameObject m_View;
-        private Int32 m_StartSeq;
-        private readonly Int32 m_WaitTime = 3;
-
-        public void Reset(Int32 seq)
-        {
-            m_StartSeq = seq;
-            return;
-        }
-        public void LoadResource()
-        {
-            if (m_View != null) return;
-            m_View = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Normal, "Combat/PnlAuctionView");
-        }
-        public void ReleaseResource()
-        {
-            if (m_View == null) return;
-            GameObject.Destroy(m_View);
-            m_View = null;
-        }
-        public StateType LogicUpdate(Int32 seq)
-        {
-            Int32 dt = (Int32)CombatFrameManager.GetIntervalTime(m_StartSeq, seq);
-            return (dt >= m_WaitTime ? StateType.Operation : StateType.Auction);
-        }
-    }
 }

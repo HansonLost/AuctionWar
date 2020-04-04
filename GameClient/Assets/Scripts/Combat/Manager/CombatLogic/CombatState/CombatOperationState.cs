@@ -1,7 +1,7 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System;
 using UnityEngine;
+using AuctionWar;
 
 public partial class CombatManager
 {
@@ -35,6 +35,10 @@ public partial class CombatManager
         /// 逻辑事件 - 更改加工完成时间。Int32 - 玩家ID
         /// </summary>
         public Action<Int32> onChangeProcess;
+        /// <summary>
+        /// 操作事件 - 玩家出售材料。Int32 - 玩家ID
+        /// </summary>
+        public Action<Int32> onSellMaterial;
 
         // --- system --- //
         public void Reset(Int32 seq)
@@ -49,12 +53,14 @@ public partial class CombatManager
         {
             if (m_View != null) return;
             m_View = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Normal, "Combat/PnlOperationView");
+            BindCommand();
         }
         public void ReleaseResource()
         {
             if (m_View == null) return;
             GameObject.Destroy(m_View);
             m_View = null;
+            RemoveCommand();
         }
         public StateType LogicUpdate(Int32 seq)
         {
@@ -63,35 +69,96 @@ public partial class CombatManager
             return (m_CurrTime >= m_OpTime ? StateType.Auction : StateType.Operation);
         }
 
+        private void BindCommand()
+        {
+            CmdPutInMaterialListener.instance.AddListener(this.PutInMaterial);
+            CmdRefreshMarketListener.instance.AddListener(this.RefreshMarket);
+            CmdSellMaterialListener.instance.AddListener(this.SellMaterial);
+        }
+        private void RemoveCommand()
+        {
+            CmdPutInMaterialListener.instance.RemoveListener(this.PutInMaterial);
+            CmdRefreshMarketListener.instance.RemoveListener(this.RefreshMarket);
+            CmdSellMaterialListener.instance.RemoveListener(this.SellMaterial);
+        }
+
         // --- command --- //
         public void TryPutInMaterial(Int32 storehouseIdx, Int32 processBlockIdx)
         {
-            // TODO : 改为发送放入材料命令
-            PutInMaterial(MatchSystem.instance.selfId, storehouseIdx, processBlockIdx);
+            CombatFrameManager.instance.SendCommand(
+                GameConst.CommandType.PutInMaterial,
+                MatchSystem.instance.selfId,
+                new CmdPutInMaterial
+                {
+                    Storehouse = storehouseIdx,
+                    Processblock = processBlockIdx,
+                });
         }
         public void TryRefreshMarket()
         {
-            RefreshMarket(MatchSystem.instance.selfId);
+            CombatFrameManager.instance.SendCommand(
+                GameConst.CommandType.RefreshMarket,
+                MatchSystem.instance.selfId,
+                new CmdRefreshMarket { });
+        }
+        public void TrySellMaterial(Int32 storeIdx)
+        {
+            var player = gameCenter.playerSet.GetSelfPlayer();
+            var store = player.GetStorehouse(storeIdx);
+            if (!store.IsEmpty())
+            {
+                CombatFrameManager.instance.SendCommand(
+                    GameConst.CommandType.SellMaterial,
+                    MatchSystem.instance.selfId,
+                    new CmdSellMaterial
+                    {
+                        Storehouse = storeIdx,
+                    });
+            }
         }
 
         // --- callback --- //
-        public void PutInMaterial(Int32 playerId, Int32 storehouseIdx, Int32 processBlockIdx)
+        private void BuyMaterial(Int32 playerId, CmdBuyMaterial param)
         {
-            var player = gameCenter.playerSet.GetSelfPlayer();
-            var storehouse = player.GetStorehouse(storehouseIdx);
+            Int32 matIdx = param.Index;
+            bool isValid = CanPlayerBuyMaterial(playerId, matIdx);
+            if (isValid)
+            {
+                var player = gameCenter.playerSet.GetPlayer(playerId);
+                var mat = gameCenter.materialMarket.BuyMaterial(matIdx);
+                var price = gameCenter.materialMarket.GetPrice(matIdx);
+                player.AddMaterial(mat);
+                player.SetMoney(player.money - price);
+            }
+        }
+        private void HandOutQuest(Int32 playerId, CmdClaimQuest param)
+        {
+            Int32 questIdx = param.Index;
+            bool isValid = CanPlayerHandOutQuest(playerId, questIdx);
+            if (isValid)
+            {
+                var quest = gameCenter.questMarket.HandOutQuest(questIdx);
+                var player = gameCenter.playerSet.GetPlayer(playerId);
+                player.AddQuest(quest);
+            }
+        }
+        private void PutInMaterial(Int32 playerId, CmdPutInMaterial param)
+        {
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            var storehouse = player.GetStorehouse(param.Storehouse);
             if (storehouse.IsEmpty()) return;
-            var leftMat = player.processFactory.AddMaterial(processBlockIdx, storehouse);
+            var leftMat = player.processFactory.AddMaterial(param.Processblock, storehouse);
             if (leftMat.count > 0)
             {
-                player.SetStorehouse(storehouseIdx, leftMat);
+                player.SetStorehouse(param.Storehouse, leftMat);
             }
             else
             {
-                player.ClearStorehouse(storehouseIdx);
+                player.RemoveStorehouse(param.Storehouse);
             }
             onPutInMaterial?.Invoke(playerId);
         }
-        public void RefreshMarket(Int32 playerId)
+        private void RefreshMarket(Int32 playerId, CmdRefreshMarket param)
         {
             var player = gameCenter.playerSet.GetPlayer(playerId);
             if(player.money < 10)
@@ -104,7 +171,41 @@ public partial class CombatManager
             player.SetMoney(player.money - 10);
             onRefreshMarket.Invoke(playerId);
         }
+        private void SellMaterial(Int32 playerId, CmdSellMaterial param)
+        {
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            if (player == null) return;
+            var store = player.GetStorehouse(param.Storehouse);
+            if (store.IsEmpty()) return;
+            player.SetMoney(player.money + store.count / 2);
+            player.RemoveStorehouse(param.Storehouse);
+            onSellMaterial?.Invoke(playerId);
+        }
 
+
+        // --- other --- //
+        private bool CanPlayerHandOutQuest(Int32 playerId, Int32 questIdx)
+        {
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            if (player != null && player.IsFullQuest())
+                return false;
+
+            var state = gameCenter.questMarket.GetQuestState(questIdx);
+            if (state != CombatGameCenter.QuestMarket.QuestStateType.Normal)
+                return false;
+
+            return true;
+        }
+        private bool CanPlayerBuyMaterial(Int32 playerId, Int32 matId)
+        {
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            var price = gameCenter.materialMarket.GetPrice(matId);
+            var state = gameCenter.materialMarket.GetState(matId);
+            return (
+                player != null &&
+                state == CombatGameCenter.MaterialMarket.StateType.Sell &&
+                player.money >= price);
+        }
         private void UpdateOperationTime(Int32 seq)
         {
             float dt = CombatFrameManager.GetIntervalTime(m_StartSeq, seq);

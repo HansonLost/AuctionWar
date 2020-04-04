@@ -1,0 +1,7 @@
+syntax = "proto3";
+package AuctionWar;
+
+message CmdAuctionRisePrice
+{
+	int32 gap = 1;
+}

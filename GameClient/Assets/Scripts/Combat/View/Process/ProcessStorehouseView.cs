@@ -52,7 +52,6 @@ public class ProcessStorehouseView : MonoBehaviour
         });
     }
 
-    // TODO : 历史代码问题，需要暂时开放，有空改为 private
     public void RefreshView(CombatGameCenter.Material mat)
     {
         if (mat.IsEmpty())

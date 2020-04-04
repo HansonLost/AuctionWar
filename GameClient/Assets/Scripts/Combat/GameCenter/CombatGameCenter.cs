@@ -10,6 +10,7 @@ public partial class CombatGameCenter
     public PlayerSet playerSet { get; private set; } = new PlayerSet();
     public QuestMarket questMarket { get; private set; } = new QuestMarket();
     public MaterialMarket materialMarket { get; private set; } = new MaterialMarket();
+    public AuctionData auction { get; private set; } = new AuctionData();
 
     public struct Quest
     {
@@ -133,6 +134,7 @@ public partial class CombatGameCenter
         public Int32 id { get; private set; }
         public Int32 money { get; private set; }
         public ProcessFactory processFactory { get; private set; } = new ProcessFactory();
+        public Int32 storehouseCapacity { get; private set; } = GameConst.COUNT_STOREHOUSE;
 
         private List<Quest> m_Quests = new List<Quest>();
         private List<Material> m_Storehouses = new List<Material>();
@@ -163,7 +165,7 @@ public partial class CombatGameCenter
         }
         public bool IsFullStorehouse()
         {
-            return m_Storehouses.Count >= GameConst.COUNT_STOREHOUSE;
+            return m_Storehouses.Count >= storehouseCapacity;
         }
         public Material GetStorehouse(Int32 idx)
         {
@@ -172,6 +174,10 @@ public partial class CombatGameCenter
                 return m_Storehouses[idx];
             }
             return Material.empty;
+        }
+        public void SetStorehouseCapacity(Int32 value)
+        {
+            storehouseCapacity = value;
         }
         public void SetStorehouse(Int32 idx, Material mat)
         {
@@ -182,7 +188,7 @@ public partial class CombatGameCenter
                 m_Storehouses[idx] = mat;
             }
         }
-        public void ClearStorehouse(Int32 idx)
+        public void RemoveStorehouse(Int32 idx)
         {
             if(Utility.IsInRange(idx, 0, m_Storehouses.Count - 1))
             {

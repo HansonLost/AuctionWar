@@ -1,0 +1,7 @@
+syntax = "proto3";
+package AuctionWar;
+
+message CmdSellMaterial
+{
+	int32 storehouse = 1;
+}

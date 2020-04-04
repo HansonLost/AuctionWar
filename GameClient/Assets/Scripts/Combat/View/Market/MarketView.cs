@@ -9,7 +9,8 @@ public class MarketView : MonoBehaviour
     public CombatGameCenter gameCenter { get{ return CombatManager.instance.gameCenter; } }
     private Button m_BtnRefresh;
     private List<SellBlock> m_PnlSell = new List<SellBlock>();
-    private List<Storehouse> m_PnlStorehouses = new List<Storehouse>();
+    //private List<Storehouse> m_PnlStorehouses = new List<Storehouse>();
+    private List<MarketStorehouseView> m_ViewStorehouses = new List<MarketStorehouseView>();
 
     private void Awake()
     {
@@ -48,12 +49,15 @@ public class MarketView : MonoBehaviour
         // 仓库面板
         for (int i = 1; i <= GameConst.COUNT_STOREHOUSE; i++)
         {
-
-            string blockPath = String.Format("BlkStorehouse/Storehouse ({0})", i);
-            var block = new Storehouse();
-            block.txtMatName = root.Find(String.Format("{0}/TxtName", blockPath)).GetComponent<Text>();
-            block.txtMatCount = root.Find(String.Format("{0}/Count/Text", blockPath)).GetComponent<Text>();
-            m_PnlStorehouses.Add(block);
+            var go = root.Find(String.Format("BlkStorehouse/Storehouse ({0})", i));
+            var view = go.GetComponent<MarketStorehouseView>();
+            view.RefreshView(CombatGameCenter.Material.empty);
+            m_ViewStorehouses.Add(view);
+            //string blockPath = String.Format("BlkStorehouse/Storehouse ({0})", i);
+            //var block = new Storehouse();
+            //block.txtMatName = root.Find(String.Format("{0}/TxtName", blockPath)).GetComponent<Text>();
+            //block.txtMatCount = root.Find(String.Format("{0}/Count/Text", blockPath)).GetComponent<Text>();
+            //m_PnlStorehouses.Add(block);
         }
     }
     private void BindEvent()
@@ -66,6 +70,7 @@ public class MarketView : MonoBehaviour
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
         state.onRefreshMarket += this.RefreshMarket;
         state.onPutInMaterial += this.UpdateStorehouse;
+        state.onSellMaterial += this.UpdateStorehouse;
     }
     private void RemoveEvent()
     {
@@ -77,6 +82,7 @@ public class MarketView : MonoBehaviour
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
         state.onRefreshMarket -= this.RefreshMarket;
         state.onPutInMaterial -= this.UpdateStorehouse;
+        state.onSellMaterial -= this.UpdateStorehouse;
     }
     private void InitSellPanel()
     {
@@ -94,24 +100,42 @@ public class MarketView : MonoBehaviour
     }
     private void InitStorehousePanel()
     {
-        var gameCenter = CombatManager.instance.gameCenter;
+        //var gameCenter = CombatManager.instance.gameCenter;
+        //var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
+        //Int32 startIdx = 0;
+        //selfPlayer.ForEachMaterial((CombatGameCenter.Material mat) =>
+        //{
+        //    if (startIdx < m_PnlStorehouses.Count)
+        //    {
+        //        var sh = m_PnlStorehouses[startIdx];
+        //        sh.txtMatName.text = mat.name;
+        //        sh.txtMatCount.text = mat.count.ToString();
+        //    }
+        //    startIdx++;
+        //});
+        //for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        //{
+        //    var sh = m_PnlStorehouses[i];
+        //    sh.txtMatName.text = "空闲";
+        //    sh.txtMatCount.text = "0";
+        //}
+
+        //var gameCenter = CombatManager.instance.gameCenter;
         var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
         Int32 startIdx = 0;
         selfPlayer.ForEachMaterial((CombatGameCenter.Material mat) =>
         {
-            if (startIdx < m_PnlStorehouses.Count)
+            if (startIdx < m_ViewStorehouses.Count)
             {
-                var sh = m_PnlStorehouses[startIdx];
-                sh.txtMatName.text = mat.name;
-                sh.txtMatCount.text = mat.count.ToString();
+                var view = m_ViewStorehouses[startIdx];
+                view.RefreshView(mat);
             }
             startIdx++;
         });
-        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        for (int i = startIdx; i < m_ViewStorehouses.Count; i++)
         {
-            var sh = m_PnlStorehouses[i];
-            sh.txtMatName.text = "空闲";
-            sh.txtMatCount.text = "0";
+            var view = m_ViewStorehouses[i];
+            view.RefreshView(CombatGameCenter.Material.empty);
         }
     }
     // --- callback --- //
@@ -146,19 +170,17 @@ public class MarketView : MonoBehaviour
         Int32 startIdx = 0;
         player.ForEachMaterial((CombatGameCenter.Material mat) =>
         {
-            if (startIdx < m_PnlStorehouses.Count)
+            if (startIdx < m_ViewStorehouses.Count)
             {
-                var sh = m_PnlStorehouses[startIdx];
-                sh.txtMatName.text = mat.name;
-                sh.txtMatCount.text = mat.count.ToString();
+                var view = m_ViewStorehouses[startIdx];
+                view.RefreshView(mat);
             }
             startIdx++;
         });
-        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        for (int i = startIdx; i < m_ViewStorehouses.Count; i++)
         {
-            var sh = m_PnlStorehouses[i];
-            sh.txtMatName.text = "空闲";
-            sh.txtMatCount.text = "0";
+            var view = m_ViewStorehouses[i];
+            view.RefreshView(CombatGameCenter.Material.empty);
         }
     }
 

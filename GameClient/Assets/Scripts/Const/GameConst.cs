@@ -15,6 +15,10 @@ public static class GameConst
         Log,
         ClaimQuest,
         BuyMaterial,
+        AuctionRisePrice,
+        PutInMaterial,
+        RefreshMarket,
+        SellMaterial,
     }
 
     public const float INTERVAL_HEART_BEAT = 5.0f;
