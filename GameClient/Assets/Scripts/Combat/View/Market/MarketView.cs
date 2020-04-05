@@ -19,7 +19,7 @@ public class MarketView : MonoBehaviour
     private void Start()
     {
         BindEvent();
-        InitSellPanel();
+        InitMarket();
         InitStorehousePanel();
     }
     private void OnDestroy()
@@ -47,17 +47,11 @@ public class MarketView : MonoBehaviour
             m_PnlSell.Add(block);
         }
         // 仓库面板
-        for (int i = 1; i <= GameConst.COUNT_STOREHOUSE; i++)
+        for (int i = 1; i <= GameConst.COUNT_STOREHOUSE_MAX; i++)
         {
             var go = root.Find(String.Format("BlkStorehouse/Storehouse ({0})", i));
             var view = go.GetComponent<MarketStorehouseView>();
-            view.RefreshView(CombatGameCenter.Material.empty);
             m_ViewStorehouses.Add(view);
-            //string blockPath = String.Format("BlkStorehouse/Storehouse ({0})", i);
-            //var block = new Storehouse();
-            //block.txtMatName = root.Find(String.Format("{0}/TxtName", blockPath)).GetComponent<Text>();
-            //block.txtMatCount = root.Find(String.Format("{0}/Count/Text", blockPath)).GetComponent<Text>();
-            //m_PnlStorehouses.Add(block);
         }
     }
     private void BindEvent()
@@ -65,9 +59,9 @@ public class MarketView : MonoBehaviour
         Int32 selfId = MatchSystem.instance.selfId;
         var player = gameCenter.playerSet.GetPlayer(selfId);
         player.onAddMaterial += this.AddMaterial;
-        gameCenter.materialMarket.onBuyMaterial += this.BuyMaterial;
 
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onBuyMaterial += this.BuyMaterial;
         state.onRefreshMarket += this.RefreshMarket;
         state.onPutInMaterial += this.UpdateStorehouse;
         state.onSellMaterial += this.UpdateStorehouse;
@@ -77,14 +71,14 @@ public class MarketView : MonoBehaviour
         Int32 selfId = MatchSystem.instance.selfId;
         var player = gameCenter.playerSet.GetPlayer(selfId);
         player.onAddMaterial -= this.AddMaterial;
-        gameCenter.materialMarket.onBuyMaterial -= this.BuyMaterial;
 
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onBuyMaterial -= this.BuyMaterial;
         state.onRefreshMarket -= this.RefreshMarket;
         state.onPutInMaterial -= this.UpdateStorehouse;
         state.onSellMaterial -= this.UpdateStorehouse;
     }
-    private void InitSellPanel()
+    private void InitMarket()
     {
         for (int i = 0; i < GameConst.COUNT_MARKET; i++)
         {
@@ -94,58 +88,29 @@ public class MarketView : MonoBehaviour
             Int32 idx = i;
             block.btnBuy.onClick.AddListener(() =>
             {
-                CombatManager.instance.TryBuyMaterial(idx);
+                var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+                state.TryBuyMaterial(idx);
             });
         }
     }
     private void InitStorehousePanel()
     {
-        //var gameCenter = CombatManager.instance.gameCenter;
-        //var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
-        //Int32 startIdx = 0;
-        //selfPlayer.ForEachMaterial((CombatGameCenter.Material mat) =>
-        //{
-        //    if (startIdx < m_PnlStorehouses.Count)
-        //    {
-        //        var sh = m_PnlStorehouses[startIdx];
-        //        sh.txtMatName.text = mat.name;
-        //        sh.txtMatCount.text = mat.count.ToString();
-        //    }
-        //    startIdx++;
-        //});
-        //for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
-        //{
-        //    var sh = m_PnlStorehouses[i];
-        //    sh.txtMatName.text = "空闲";
-        //    sh.txtMatCount.text = "0";
-        //}
-
-        //var gameCenter = CombatManager.instance.gameCenter;
         var selfPlayer = gameCenter.playerSet.GetSelfPlayer();
-        Int32 startIdx = 0;
-        selfPlayer.ForEachMaterial((CombatGameCenter.Material mat) =>
-        {
-            if (startIdx < m_ViewStorehouses.Count)
-            {
-                var view = m_ViewStorehouses[startIdx];
-                view.RefreshView(mat);
-            }
-            startIdx++;
-        });
-        for (int i = startIdx; i < m_ViewStorehouses.Count; i++)
-        {
-            var view = m_ViewStorehouses[i];
-            view.RefreshView(CombatGameCenter.Material.empty);
-        }
+        UpdateStorehouse(selfPlayer.id);
     }
+
     // --- callback --- //
     private void AddMaterial(CombatGameCenter.Material mat)
     {
         InitStorehousePanel();
     }
-    private void BuyMaterial(Int32 idx, Int32 price, CombatGameCenter.Material mat)
+    private void BuyMaterial(Int32 playerId, Int32 marketIdx)
     {
-        m_PnlSell[idx].btnBuy.interactable = false;
+        if (playerId != MatchSystem.instance.selfId) return;
+        if(Utility.IsInRange(marketIdx, 0, m_PnlSell.Count - 1))
+        {
+            m_PnlSell[marketIdx].btnBuy.interactable = false;
+        }
     }
     private void RefreshMarket(Int32 playerId)
     {
@@ -156,11 +121,6 @@ public class MarketView : MonoBehaviour
             block.btnBuy.interactable = true;
             block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
             block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
-            Int32 idx = i;  // 使用 i 的话，所有值都编程一样的。
-            block.btnBuy.onClick.AddListener(() =>
-            {
-                CombatManager.instance.TryBuyMaterial(idx);
-            });
         }
     }
     private void UpdateStorehouse(Int32 playerId)
@@ -173,14 +133,22 @@ public class MarketView : MonoBehaviour
             if (startIdx < m_ViewStorehouses.Count)
             {
                 var view = m_ViewStorehouses[startIdx];
+                view.SetLock(false);
                 view.RefreshView(mat);
             }
             startIdx++;
         });
-        for (int i = startIdx; i < m_ViewStorehouses.Count; i++)
+        for (int i = startIdx; i < player.storehouseCapacity; i++)
         {
             var view = m_ViewStorehouses[i];
+            view.SetLock(false);
             view.RefreshView(CombatGameCenter.Material.empty);
+            startIdx++;
+        }
+        for (int i = startIdx; i <m_ViewStorehouses.Count; i++)
+        {
+            var view = m_ViewStorehouses[i];
+            view.SetLock(true);
         }
     }
 

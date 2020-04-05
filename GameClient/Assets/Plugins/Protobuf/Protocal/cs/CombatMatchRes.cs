@@ -24,13 +24,13 @@ namespace AuctionWar {
     static CombatMatchResReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChRDb21iYXRNYXRjaFJlcy5wcm90bxIKQXVjdGlvbldhciI+Cg5Db21iYXRN",
+            "ChRDb21iYXRNYXRjaFJlcy5wcm90bxIKQXVjdGlvbldhciJTCg5Db21iYXRN",
             "YXRjaFJlcxIOCgZyb29tSWQYASABKA0SDAoEc2VlZBgCIAEoBRIOCgZzZWxm",
-            "SWQYAyABKAViBnByb3RvMw=="));
+            "SWQYAyABKAUSEwoLcGxheWVyQ291bnQYBCABKAViBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.CombatMatchRes), global::AuctionWar.CombatMatchRes.Parser, new[]{ "RoomId", "Seed", "SelfId" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.CombatMatchRes), global::AuctionWar.CombatMatchRes.Parser, new[]{ "RoomId", "Seed", "SelfId", "PlayerCount" }, null, null, null, null)
           }));
     }
     #endregion
@@ -65,6 +65,7 @@ namespace AuctionWar {
       roomId_ = other.roomId_;
       seed_ = other.seed_;
       selfId_ = other.selfId_;
+      playerCount_ = other.playerCount_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -106,6 +107,17 @@ namespace AuctionWar {
       }
     }
 
+    /// <summary>Field number for the "playerCount" field.</summary>
+    public const int PlayerCountFieldNumber = 4;
+    private int playerCount_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int PlayerCount {
+      get { return playerCount_; }
+      set {
+        playerCount_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as CombatMatchRes);
@@ -122,6 +134,7 @@ namespace AuctionWar {
       if (RoomId != other.RoomId) return false;
       if (Seed != other.Seed) return false;
       if (SelfId != other.SelfId) return false;
+      if (PlayerCount != other.PlayerCount) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -131,6 +144,7 @@ namespace AuctionWar {
       if (RoomId != 0) hash ^= RoomId.GetHashCode();
       if (Seed != 0) hash ^= Seed.GetHashCode();
       if (SelfId != 0) hash ^= SelfId.GetHashCode();
+      if (PlayerCount != 0) hash ^= PlayerCount.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -156,6 +170,10 @@ namespace AuctionWar {
         output.WriteRawTag(24);
         output.WriteInt32(SelfId);
       }
+      if (PlayerCount != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(PlayerCount);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -172,6 +190,9 @@ namespace AuctionWar {
       }
       if (SelfId != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(SelfId);
+      }
+      if (PlayerCount != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(PlayerCount);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -192,6 +213,9 @@ namespace AuctionWar {
       }
       if (other.SelfId != 0) {
         SelfId = other.SelfId;
+      }
+      if (other.PlayerCount != 0) {
+        PlayerCount = other.PlayerCount;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -214,6 +238,10 @@ namespace AuctionWar {
           }
           case 24: {
             SelfId = input.ReadInt32();
+            break;
+          }
+          case 32: {
+            PlayerCount = input.ReadInt32();
             break;
           }
         }

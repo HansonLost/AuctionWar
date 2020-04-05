@@ -134,7 +134,7 @@ public partial class CombatGameCenter
         public Int32 id { get; private set; }
         public Int32 money { get; private set; }
         public ProcessFactory processFactory { get; private set; } = new ProcessFactory();
-        public Int32 storehouseCapacity { get; private set; } = GameConst.COUNT_STOREHOUSE;
+        public Int32 storehouseCapacity { get; private set; } = GameConst.COUNT_STOREHOUSE_BEGIN;
 
         private List<Quest> m_Quests = new List<Quest>();
         private List<Material> m_Storehouses = new List<Material>();
@@ -256,7 +256,7 @@ public partial class CombatGameCenter
         public void ResetPlayer()
         {
             m_Players.Clear();
-            for (int i = 1; i <= 2; i++)
+            for (int i = 1; i <= MatchSystem.instance.playerCount; i++)
             {
                 m_Players.Add(i, new Player(i));
             }

@@ -19,6 +19,11 @@ public partial class CombatManager
 
         public Action<Int32> onChangeFreezenTime;
         public Action<Int32> onChangeCountdownTime;
+
+        /// <summary>
+        /// 操作事件 - 玩家购买材料。Int32 - 玩家ID; Int32 - 采购栏索引
+        /// </summary>
+        public Action<Int32, Int32> onBuyMaterial;
         /// <summary>
         /// 操作事件 - 玩家把材料放入加工模块中。Int32 - 玩家ID
         /// </summary>
@@ -71,18 +76,36 @@ public partial class CombatManager
 
         private void BindCommand()
         {
+            CmdBuyMaterialListener.instance.AddListener(this.BuyMaterial);
             CmdPutInMaterialListener.instance.AddListener(this.PutInMaterial);
             CmdRefreshMarketListener.instance.AddListener(this.RefreshMarket);
             CmdSellMaterialListener.instance.AddListener(this.SellMaterial);
         }
         private void RemoveCommand()
         {
+            CmdBuyMaterialListener.instance.RemoveListener(this.BuyMaterial);
             CmdPutInMaterialListener.instance.RemoveListener(this.PutInMaterial);
             CmdRefreshMarketListener.instance.RemoveListener(this.RefreshMarket);
             CmdSellMaterialListener.instance.RemoveListener(this.SellMaterial);
         }
 
         // --- command --- //
+        public void TryBuyMaterial(Int32 idx)
+        {
+            Int32 selfId = MatchSystem.instance.selfId;
+            bool isValid = CanPlayerBuyMaterial(selfId, idx);
+
+            if (isValid)
+            {
+                CombatFrameManager.instance.SendCommand(
+                    GameConst.CommandType.BuyMaterial,
+                    selfId,
+                    new CmdBuyMaterial
+                    {
+                        Index = idx,
+                    });
+            }
+        }
         public void TryPutInMaterial(Int32 storehouseIdx, Int32 processBlockIdx)
         {
             CombatFrameManager.instance.SendCommand(
@@ -130,6 +153,7 @@ public partial class CombatManager
                 player.AddMaterial(mat);
                 player.SetMoney(player.money - price);
             }
+            onBuyMaterial?.Invoke(playerId, param.Index);
         }
         private void HandOutQuest(Int32 playerId, CmdClaimQuest param)
         {
@@ -203,6 +227,7 @@ public partial class CombatManager
             var state = gameCenter.materialMarket.GetState(matId);
             return (
                 player != null &&
+                !player.IsFullStorehouse() &&
                 state == CombatGameCenter.MaterialMarket.StateType.Sell &&
                 player.money >= price);
         }
@@ -239,7 +264,7 @@ public partial class CombatManager
         }
         private void UpdateProcessTime(Int32 seq)
         {
-            for (int i = 1; i <= GameConst.COMBAT_PLAYER_COUNT; i++)
+            for (int i = 1; i <= MatchSystem.instance.playerCount; i++)
             {
                 var player = gameCenter.playerSet.GetPlayer(i);
                 List<Int32> rmvList = new List<Int32>();

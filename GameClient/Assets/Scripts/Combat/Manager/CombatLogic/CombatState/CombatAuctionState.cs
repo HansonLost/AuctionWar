@@ -55,34 +55,41 @@ public class AuctionState : CombatManager.IState
         AuctionData auction = gameCenter.auction;
         float dt = CombatFrameManager.GetIntervalTime(m_StartSeq, seq);
         float leftTime = 0;
-        if(auction.currentCaller == null)
+
+        if(auction.GetPassPlayerCount() >= MatchSystem.instance.playerCount)
         {
-            // 无人叫价
-            leftTime = Math.Max(NOBODY_CALL_TIME - dt, 0);
-            if(dt >= NOBODY_CALL_TIME)
-            {
-                // 流拍
-                auction.Next();
-                m_StartSeq = seq;
-                onNextAuctionItem?.Invoke();
-            }
+            // 全员放弃竞拍
+            NextAuctionItem(auction, seq);
         }
         else
         {
-            // 已有人叫价
-            leftTime = Math.Max(ANYBODY_CALL_TIME - dt, 0);
-            if(dt >= ANYBODY_CALL_TIME)
+            if (auction.currentCaller == null)
             {
-                // 竞拍成功
-                var player = auction.currentCaller;
-                var price = auction.GetCurrentPrice();
-                player.SetMoney(player.money - price);
-                ReceiveAuctionItem(player.id, auction.GetCurrentProp());
-                auction.Next();
-                m_StartSeq = seq;
-                onNextAuctionItem?.Invoke();
+                // 无人叫价
+                leftTime = Math.Max(NOBODY_CALL_TIME - dt, 0);
+                if (dt >= NOBODY_CALL_TIME)
+                {
+                    // 流拍
+                    NextAuctionItem(auction, seq);
+                }
+            }
+            else
+            {
+                // 已有人叫价
+                leftTime = Math.Max(ANYBODY_CALL_TIME - dt, 0);
+                if (dt >= ANYBODY_CALL_TIME)
+                {
+                    // 竞拍成功
+                    var player = auction.currentCaller;
+                    var price = auction.GetCurrentPrice();
+                    player.SetMoney(player.money - price);
+                    ReceiveAuctionItem(player.id, auction.GetCurrentProp());
+                    NextAuctionItem(auction, seq);
+                }
             }
         }
+
+        
         if (auction.IsEnd())
         {
             nextState = CombatManager.StateType.Operation;
@@ -119,7 +126,7 @@ public class AuctionState : CombatManager.IState
     // --- callback --- //
     private void Pass(Int32 playerId)
     {
-        Debug.Log("PASS 功能未实现");
+        gameCenter.auction.Pass(playerId);
     }
     private void RisePrice(Int32 playerId, CmdAuctionRisePrice param)
     {
@@ -134,9 +141,16 @@ public class AuctionState : CombatManager.IState
     }
     
     // --- other --- //
+    private void NextAuctionItem(AuctionData auction, Int32 seq)
+    {
+        auction.Next();
+        m_StartSeq = seq;
+        onNextAuctionItem?.Invoke();
+    }
     private void ReceiveAuctionItem(Int32 playerId, CombatProp prop)
     {
-        Debug.Log(String.Format("玩家{0}获得道具{1}", playerId, prop.GetName()));
+        var player = gameCenter.playerSet.GetPlayer(playerId);
+        prop.OnCollect(player);
     }
 }
 

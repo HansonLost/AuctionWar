@@ -93,6 +93,7 @@ public class PropWin : CombatProp
     {
         base.OnCollect(player);
         // TODO : 胜利
+        CombatManager.instance.QuitCombat();
     }
 }
 

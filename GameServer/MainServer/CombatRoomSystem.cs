@@ -67,6 +67,7 @@ namespace MainServer
                     {
                         RoomId = res.roomId,
                         Seed = seed,
+                        PlayerCount = CombatRoom.MAX_PLAYER,
                         SelfId = playerId,
                     });
                     playerId++;

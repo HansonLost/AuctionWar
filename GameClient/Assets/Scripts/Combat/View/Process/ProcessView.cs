@@ -58,7 +58,7 @@ public class ProcessView : MonoBehaviour
             m_PnlProcessBlocks.Add(view);
         }
         // 仓库面板
-        for (int i = 1; i <= GameConst.COUNT_STOREHOUSE; i++)
+        for (int i = 1; i <= GameConst.COUNT_STOREHOUSE_MAX; i++)
         {
             var go = root.Find(String.Format("StoreHouse/Storehouse ({0})", i));
             var view = go.GetComponent<ProcessStorehouseView>();
@@ -119,14 +119,22 @@ public class ProcessView : MonoBehaviour
             if (Utility.IsInRange(startIdx, 0, m_PnlStorehouses.Count - 1))
             {
                 var sh = m_PnlStorehouses[startIdx];
+                sh.SetLock(false);
                 sh.RefreshView(mat);
             }
             startIdx++;
         });
-        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        for (int i = startIdx; i < selfPlayer.storehouseCapacity; i++)
         {
             var sh = m_PnlStorehouses[i];
+            sh.SetLock(false);
             sh.RefreshView(CombatGameCenter.Material.empty);
+            startIdx++;
+        }
+        for (int i = startIdx; i < m_PnlStorehouses.Count; i++)
+        {
+            var store = m_PnlStorehouses[i];
+            store.SetLock(true);
         }
     }
 

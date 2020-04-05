@@ -8,6 +8,7 @@ public class AuctionData
     public const Int32 auctionItemCount = 4;
     private List<CombatProp> m_Props = new List<CombatProp>();
     private List<Int32> m_Prices = new List<Int32>();
+    private HashSet<Int32> m_PassPlayers = new HashSet<Int32>();
 
     public Int32 m_CurrIdx { get; private set; } = 0;
     public CombatGameCenter.Player currentCaller { get; private set; }
@@ -74,6 +75,7 @@ public class AuctionData
     public void Next()
     {
         m_CurrIdx = Math.Min(m_CurrIdx + 1, m_Props.Count);
+        m_PassPlayers.Clear();
         currentCaller = null;
     }
     public bool RisePrice(CombatGameCenter.Player caller, Int32 value)
@@ -84,6 +86,12 @@ public class AuctionData
         currentCaller = caller;
         return true;
     }
+    public void Pass(Int32 playerId)
+    {
+        if (m_PassPlayers.Contains(playerId)) return;
+        m_PassPlayers.Add(playerId);
+    }
+    public Int32 GetPassPlayerCount() { return m_PassPlayers.Count; }
 }
 
 

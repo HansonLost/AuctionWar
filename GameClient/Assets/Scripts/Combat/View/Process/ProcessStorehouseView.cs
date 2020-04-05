@@ -16,6 +16,7 @@ public class ProcessStorehouseView : MonoBehaviour
 #pragma warning restore 0649
 
     private ProcessView m_ProcessView;
+    private bool m_IsLock = false;
     private Int32 m_HouseIdx;
     private bool m_IsSelect = false;
 
@@ -26,7 +27,7 @@ public class ProcessStorehouseView : MonoBehaviour
     }
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (m_IsSelect) return;
+        if (m_IsLock || m_IsSelect) return;
         m_IsSelect = true;
         var panel = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.UI, m_PrefabSelector);
         panel.transform.position = this.transform.position;
@@ -51,9 +52,19 @@ public class ProcessStorehouseView : MonoBehaviour
             m_IsSelect = false;
         });
     }
-
+    
+    public void SetLock(bool value)
+    {
+        m_IsLock = value;
+        if (value)
+        {
+            m_TxtMatCount.text = "?";
+            m_TxtMatName.text = "锁";
+        }
+    }
     public void RefreshView(CombatGameCenter.Material mat)
     {
+        if (m_IsLock) return;
         if (mat.IsEmpty())
         {
             m_TxtMatName.text = "空闲";

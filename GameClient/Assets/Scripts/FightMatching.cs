@@ -59,6 +59,7 @@ public class FightMatching : MonoBehaviour
         else
         {
             MatchSystem.instance.random = new System.Random(combatMatchRes.Seed);
+            MatchSystem.instance.playerCount = combatMatchRes.PlayerCount;
             MatchSystem.instance.selfId = combatMatchRes.SelfId;
             SceneManager.LoadScene((Int32)GameConst.SceneType.Combat);
         }

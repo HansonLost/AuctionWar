@@ -9,6 +9,10 @@ public class MatchSystem : GameBaseManager<MatchSystem>
     protected override bool IsDonDestroyOnLoad() => true;
 
     /// <summary>
+    /// 游戏人数
+    /// </summary>
+    public Int32 playerCount = 1;
+    /// <summary>
     /// 角色ID
     /// </summary>
     public Int32 selfId { get; set; } = 1;

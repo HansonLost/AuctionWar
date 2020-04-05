@@ -52,7 +52,6 @@ public partial class CombatManager : GameBaseManager<CombatManager>
 
         // command
         CmdClaimQuestListener.instance.AddListener(this.HandOutQuest);
-        CmdBuyMaterialListener.instance.AddListener(this.BuyMaterial);
 
         NetManager.Send((Int16)ProtocType.CombatReady, new CombatReady());
     }
@@ -105,21 +104,6 @@ public partial class CombatManager : GameBaseManager<CombatManager>
             player.AddQuest(quest);
         }
     }
-    private void BuyMaterial(Int32 playerId, CmdBuyMaterial cmdBuyMaterial)
-    {
-        Int32 selfId = MatchSystem.instance.selfId;
-        Int32 matIdx = cmdBuyMaterial.Index;
-        if (selfId != playerId) return;
-        bool isValid = CanPlayerBuyMaterial(playerId, matIdx);
-        if (isValid)
-        {
-            var player = gameCenter.playerSet.GetPlayer(playerId);
-            var mat = gameCenter.materialMarket.BuyMaterial(matIdx);
-            var price = gameCenter.materialMarket.GetPrice(matIdx);
-            player.AddMaterial(mat);
-            player.SetMoney(player.money - price);
-        }
-    }
     
     // --- command --- //
     public void QuitCombat()
@@ -141,21 +125,6 @@ public partial class CombatManager : GameBaseManager<CombatManager>
                });
         }
     }
-    public void TryBuyMaterial(Int32 idx)
-    {
-        Int32 selfId = MatchSystem.instance.selfId;
-        bool isValid = CanPlayerBuyMaterial(selfId, idx);
-        if (isValid)
-        {
-            CombatFrameManager.instance.SendCommand(
-                GameConst.CommandType.BuyMaterial,
-                selfId,
-                new CmdBuyMaterial
-                {
-                    Index = idx,
-                });
-        }
-    }
 
     // --- other --- //
     private bool CanPlayerHandOutQuest(Int32 playerId, Int32 questIdx)
@@ -169,16 +138,6 @@ public partial class CombatManager : GameBaseManager<CombatManager>
             return false;
 
         return true;
-    }
-    private bool CanPlayerBuyMaterial(Int32 playerId, Int32 matId)
-    {
-        var player = gameCenter.playerSet.GetPlayer(playerId);
-        var price = gameCenter.materialMarket.GetPrice(matId);
-        var state = gameCenter.materialMarket.GetState(matId);
-        return (
-            player != null &&
-            state == CombatGameCenter.MaterialMarket.StateType.Sell &&
-            player.money >= price);
     }
 
     public enum StateType
