@@ -19,6 +19,7 @@ public static class GameConst
         PutInMaterial,
         RefreshMarket,
         SellMaterial,
+        AuctionPass,
     }
 
     public const float INTERVAL_HEART_BEAT = 5.0f;

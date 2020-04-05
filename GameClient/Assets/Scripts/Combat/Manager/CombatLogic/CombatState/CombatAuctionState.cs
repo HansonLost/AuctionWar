@@ -25,6 +25,10 @@ public class AuctionState : CombatManager.IState
     /// 操作事件 - 叫价。Int32 - 叫价玩家ID
     /// </summary>
     public Action<Int32> onRisePrice;
+    /// <summary>
+    /// 操作事件 - 放弃。Int32 - 放弃者ID
+    /// </summary>
+    public Action<Int32> onPass;
 
     // --- system --- //
     public void Reset(Int32 seq)
@@ -98,16 +102,21 @@ public class AuctionState : CombatManager.IState
     private void BindCommand()
     {
         CmdAuctionRisePriceListener.instance.AddListener(this.RisePrice);
+        CmdAuctionPassListener.instance.AddListener(this.Pass);
     }
     private void RemoveCommand()
     {
         CmdAuctionRisePriceListener.instance.RemoveListener(this.RisePrice);
+        CmdAuctionPassListener.instance.RemoveListener(this.Pass);
     }
 
     // --- command --- //
     public void TryPass()
     {
-        Pass(MatchSystem.instance.selfId);
+        CombatFrameManager.instance.SendCommand(
+            GameConst.CommandType.AuctionPass,
+            MatchSystem.instance.selfId,
+            new CmdAuctionPass { });
     }
     public void TryRisePrice(Int32 gap)
     {
@@ -121,9 +130,12 @@ public class AuctionState : CombatManager.IState
     }
 
     // --- callback --- //
-    private void Pass(Int32 playerId)
+    private void Pass(Int32 playerId, CmdAuctionPass param)
     {
-        gameCenter.auction.Pass(playerId);
+        if (gameCenter.auction.Pass(playerId))
+        {
+            onPass?.Invoke(playerId);
+        }
     }
     private void RisePrice(Int32 playerId, CmdAuctionRisePrice param)
     {

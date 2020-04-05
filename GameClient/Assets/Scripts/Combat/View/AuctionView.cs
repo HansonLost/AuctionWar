@@ -23,7 +23,7 @@ public class AuctionView : MonoBehaviour
     private void Start()
     {
         BindEvent();
-        UpdateItem();
+        ChangeItem();
     }
     private void OnDestroy()
     {
@@ -51,19 +51,21 @@ public class AuctionView : MonoBehaviour
     private void BindEvent()
     {
         var state = CombatManager.instance.GetState<AuctionState>();
-        state.onNextAuctionItem += this.UpdateItem;
+        state.onNextAuctionItem += this.ChangeItem;
         state.onRisePrice += this.RisePrice;
         state.onUpdate += this.UpdateTime;
+        state.onPass += this.Pass;
     }
     private void RemoveEvent()
     {
         var state = CombatManager.instance.GetState<AuctionState>();
-        state.onNextAuctionItem -= UpdateItem;
+        state.onNextAuctionItem -= ChangeItem;
         state.onRisePrice -= this.RisePrice;
         state.onUpdate -= this.UpdateTime;
+        state.onPass -= this.Pass;
     }
 
-    private void UpdateItem()
+    private void ChangeItem()
     {
         var prop = gameCenter.auction.GetCurrentProp();
         if(prop != null)
@@ -76,6 +78,17 @@ public class AuctionView : MonoBehaviour
             btn.interactable = true;
         }
         m_BtnPass.interactable = true;
+    }
+    private void Pass(Int32 playerId)
+    {
+        if(playerId == MatchSystem.instance.selfId)
+        {
+            m_BtnPass.interactable = false;
+            foreach (var btn in m_RisePrice)
+            {
+                btn.interactable = true;
+            }
+        }
     }
     private void RisePrice(Int32 playerId)
     {

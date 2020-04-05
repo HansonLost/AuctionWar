@@ -80,3 +80,9 @@ public class CmdSellMaterialListener : BaseCmdListener<CmdSellMaterialListener, 
     public override GameConst.CommandType GetCommandType() => GameConst.CommandType.SellMaterial;
     public override MessageParser<CmdSellMaterial> GetParser() => CmdSellMaterial.Parser;
 }
+
+public class CmdAuctionPassListener : BaseCmdListener<CmdAuctionPassListener, CmdAuctionPass>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.AuctionPass;
+    public override MessageParser<CmdAuctionPass> GetParser() => CmdAuctionPass.Parser;
+}

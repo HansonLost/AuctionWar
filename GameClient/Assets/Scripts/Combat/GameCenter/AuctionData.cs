@@ -87,10 +87,11 @@ public class AuctionData
         currentCaller = caller;
         return true;
     }
-    public void Pass(Int32 playerId)
+    public bool Pass(Int32 playerId)
     {
-        if (m_PassPlayers.Contains(playerId)) return;
+        if (m_PassPlayers.Contains(playerId)) return false;
         m_PassPlayers.Add(playerId);
+        return true;
     }
     public Int32 GetPassPlayerCount() { return m_PassPlayers.Count; }
 }
