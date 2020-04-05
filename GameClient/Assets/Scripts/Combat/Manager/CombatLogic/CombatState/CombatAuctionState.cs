@@ -88,7 +88,6 @@ public class AuctionState : CombatManager.IState
                 }
             }
         }
-
         
         if (auction.IsEnd())
         {

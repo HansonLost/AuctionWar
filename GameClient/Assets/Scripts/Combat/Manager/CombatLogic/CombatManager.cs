@@ -57,6 +57,7 @@ public partial class CombatManager : GameBaseManager<CombatManager>
     }
     private void OnDestroy()
     {
+        CombatFrameManager.instance.onLogicUpdate -= this.UpdateLogicFrame;
         CombatResultListener.instance.RemoveListener(this.CombatCheckout);
         CmdClaimQuestListener.instance.RemoveListener(this.HandOutQuest);
     }
@@ -91,7 +92,23 @@ public partial class CombatManager : GameBaseManager<CombatManager>
     }
     private void CombatCheckout(CombatResult combatResult)
     {
-        SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
+        string msg = "";
+        if(combatResult.WinnerId == MatchSystem.instance.selfId)
+        {
+            msg = "我是冠军";
+        }
+        else
+        {
+            msg = "你输了";
+        }
+        var go = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Top, "System/PnlComfirmView");
+        var wnd = go.GetComponent<ConfirmView>();
+        wnd.SetLogMessage(msg);
+        wnd.onConfirm.AddListener(() =>
+        {
+            SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
+        });
+        
     }
     private void HandOutQuest(Int32 playerId, CmdClaimQuest cmdClaimQuest)
     {
@@ -124,6 +141,10 @@ public partial class CombatManager : GameBaseManager<CombatManager>
                    Index = index,
                });
         }
+    }
+    public void TryWin()
+    {
+        NetManager.Send((Int16)ProtocType.WinCombat, new WinCombat { });
     }
 
     // --- other --- //

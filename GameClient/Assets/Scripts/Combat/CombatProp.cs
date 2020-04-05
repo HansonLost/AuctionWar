@@ -92,8 +92,7 @@ public class PropWin : CombatProp
     public override void OnCollect(CombatGameCenter.Player player)
     {
         base.OnCollect(player);
-        // TODO : 胜利
-        CombatManager.instance.QuitCombat();
+        CombatManager.instance.TryWin();
     }
 }
 

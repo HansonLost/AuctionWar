@@ -300,7 +300,7 @@ public partial class CombatManager
             Int32 seed = MatchSystem.instance.random.Next();
             System.Random random = new System.Random(seed);
             gameCenter.questMarket.RefreshQuest(random.Next());
-            for (int playerId = 1; playerId <= GameConst.COMBAT_PLAYER_COUNT; playerId++)
+            for (int playerId = 1; playerId <= MatchSystem.instance.playerCount; playerId++)
             {
                 gameCenter.materialMarket.RefreshMarket(playerId, random.Next());
             }

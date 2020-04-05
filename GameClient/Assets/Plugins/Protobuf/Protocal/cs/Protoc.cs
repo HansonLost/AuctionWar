@@ -16,6 +16,7 @@ namespace AuctionWar
 		LoginRes,
 		QuitCombat,
 		ServerOverload,
+		WinCombat,
 	}
 	public sealed class CancelCombatMatchListener : NetManager.BaseListener<CancelCombatMatchListener, CancelCombatMatch>
 	{
@@ -76,5 +77,10 @@ namespace AuctionWar
 	{
 		public override short GetProtocType() => (Int16)ProtocType.ServerOverload;
 		protected override ServerOverload ParseData(byte[] data, int offset, int size) => ServerOverload.Parser.ParseFrom(data, offset, size);
+	}
+	public sealed class WinCombatListener : NetManager.BaseListener<WinCombatListener, WinCombat>
+	{
+		public override short GetProtocType() => (Int16)ProtocType.WinCombat;
+		protected override WinCombat ParseData(byte[] data, int offset, int size) => WinCombat.Parser.ParseFrom(data, offset, size);
 	}
 }

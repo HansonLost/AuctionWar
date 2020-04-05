@@ -82,6 +82,7 @@ public class AuctionData
     {
         if (IsEnd()) return false;    // 无拍卖品
         if (currentCaller != null && caller.id == currentCaller.id) return false;   // 重复叫价
+        if (caller.money < m_Prices[m_CurrIdx] + value) return false;        // 不够钱
         m_Prices[m_CurrIdx] += value;
         currentCaller = caller;
         return true;

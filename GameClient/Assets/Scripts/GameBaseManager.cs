@@ -14,7 +14,6 @@ public abstract class GameBaseManager<TSelf> : MonoBehaviour
         if(instance != null)
         {
             string name = GetInstance().GetType().ToString();
-            Debug.Log(String.Format("{0} : GameBaseManager 在场景中多于1个.", name));
             GameObject.Destroy(this.gameObject);
             return;
         }

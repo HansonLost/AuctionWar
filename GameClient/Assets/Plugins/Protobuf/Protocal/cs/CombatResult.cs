@@ -24,12 +24,12 @@ namespace AuctionWar {
     static CombatResultReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "ChJDb21iYXRSZXN1bHQucHJvdG8SCkF1Y3Rpb25XYXIiDgoMQ29tYmF0UmVz",
-            "dWx0YgZwcm90bzM="));
+            "ChJDb21iYXRSZXN1bHQucHJvdG8SCkF1Y3Rpb25XYXIiIAoMQ29tYmF0UmVz",
+            "dWx0EhAKCHdpbm5lcklkGAEgASgFYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.CombatResult), global::AuctionWar.CombatResult.Parser, null, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::AuctionWar.CombatResult), global::AuctionWar.CombatResult.Parser, new[]{ "WinnerId" }, null, null, null, null)
           }));
     }
     #endregion
@@ -61,12 +61,24 @@ namespace AuctionWar {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public CombatResult(CombatResult other) : this() {
+      winnerId_ = other.winnerId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public CombatResult Clone() {
       return new CombatResult(this);
+    }
+
+    /// <summary>Field number for the "winnerId" field.</summary>
+    public const int WinnerIdFieldNumber = 1;
+    private int winnerId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int WinnerId {
+      get { return winnerId_; }
+      set {
+        winnerId_ = value;
+      }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -82,12 +94,14 @@ namespace AuctionWar {
       if (ReferenceEquals(other, this)) {
         return true;
       }
+      if (WinnerId != other.WinnerId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
+      if (WinnerId != 0) hash ^= WinnerId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -101,6 +115,10 @@ namespace AuctionWar {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
+      if (WinnerId != 0) {
+        output.WriteRawTag(8);
+        output.WriteInt32(WinnerId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -109,6 +127,9 @@ namespace AuctionWar {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
+      if (WinnerId != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(WinnerId);
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -119,6 +140,9 @@ namespace AuctionWar {
     public void MergeFrom(CombatResult other) {
       if (other == null) {
         return;
+      }
+      if (other.WinnerId != 0) {
+        WinnerId = other.WinnerId;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -131,6 +155,10 @@ namespace AuctionWar {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
+          case 8: {
+            WinnerId = input.ReadInt32();
+            break;
+          }
         }
       }
     }

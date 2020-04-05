@@ -1,7 +1,7 @@
 syntax = "proto3";
 package AuctionWar;
 
-message CombatResult
+message WinCombat
 {
-	int32 winnerId = 1;
+	
 }

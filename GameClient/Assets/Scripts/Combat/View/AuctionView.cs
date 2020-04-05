@@ -45,11 +45,6 @@ public class AuctionView : MonoBehaviour
             {
                 var state = CombatManager.instance.GetState<AuctionState>();
                 state.TryRisePrice(gap);
-                m_BtnPass.interactable = false;
-                foreach (var b in m_RisePrice)
-                {
-                    b.interactable = false;
-                }
             });
         }
     }
@@ -91,6 +86,14 @@ public class AuctionView : MonoBehaviour
             foreach (var btn in m_RisePrice)
             {
                 btn.interactable = true;
+            }
+        }
+        else
+        {
+            m_BtnPass.interactable = false;
+            foreach (var b in m_RisePrice)
+            {
+                b.interactable = false;
             }
         }
     }
