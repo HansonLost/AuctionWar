@@ -193,7 +193,7 @@ public partial class CombatManager
             Int32 seed = MatchSystem.instance.random.Next();
             gameCenter.materialMarket.RefreshMarket(playerId, seed);
             player.SetMoney(player.money - 10);
-            onRefreshMarket.Invoke(playerId);
+            onRefreshMarket?.Invoke(playerId);
         }
         private void SellMaterial(Int32 playerId, CmdSellMaterial param)
         {

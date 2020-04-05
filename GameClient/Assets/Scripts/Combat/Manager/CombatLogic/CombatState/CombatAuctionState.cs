@@ -36,10 +36,8 @@ public class AuctionState : CombatManager.IState
     }
     public void LoadResource()
     {
-        if (m_View == null)
-        {
-            m_View = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Normal, "Combat/PnlAuctionView");
-        }
+        if (m_View != null) return;
+        m_View = CanvasManager.instance.CreatePanel(CanvasManager.PanelLevelType.Normal, "Combat/PnlAuctionView");
         BindCommand();
     }
     public void ReleaseResource()

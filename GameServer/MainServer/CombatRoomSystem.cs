@@ -94,11 +94,12 @@ namespace MainServer
             var room = this.GetPlayerRoom(cfd);
             if (room == null) return;
             Console.WriteLine(String.Format("房间 {0}：{1}号玩家退出对战", room.roomId, room.GetPlayerId(cfd)));
-            if (room.PlayerQuit(cfd))
+            room.PlayerQuit(cfd);
+            room.ForEachPlayer((CombatRoom.Player player) =>
             {
-                m_RoomSet.Remove(room.roomId);
-                m_MapPlayerToRoom.Remove(cfd);
-            }
+                m_MapPlayerToRoom.Remove(player.cfd);
+            });
+            m_RoomSet.Remove(room.roomId);
         }
 
         
@@ -123,11 +124,12 @@ namespace MainServer
             var room = this.GetPlayerRoom(cfd);
             if (room == null) return;
             Console.WriteLine(String.Format("房间 {0}：{1}号玩家获取胜利", room.roomId, room.GetPlayerId(cfd)));
-            if (room.PlayerWin(cfd))
+            room.PlayerWin(cfd);
+            room.ForEachPlayer((CombatRoom.Player player) =>
             {
-                m_RoomSet.Remove(room.roomId);
-                m_MapPlayerToRoom.Remove(cfd);
-            }
+                m_MapPlayerToRoom.Remove(player.cfd);
+            });
+            m_RoomSet.Remove(room.roomId);
         }
 
         private CombatRoom GetPlayerRoom(Socket cfd)
@@ -172,7 +174,7 @@ namespace MainServer
                 m_Players.Clear();
                 m_NextId = 1;
             }
-            public bool PlayerWin(Socket cfd)
+            public void PlayerWin(Socket cfd)
             {
                 if (m_Players.ContainsKey(cfd))
                 {
@@ -180,49 +182,48 @@ namespace MainServer
                     foreach (var pair in m_Players)
                     {
                         var player = pair.Value;
+                        player.isQuit = true;
                         ServerNetManager.Send(player.cfd, (Int16)ProtocType.CombatResult, new CombatResult
                         {
                             WinnerId = winnerId,
                         });
                     }
-                    m_Players.Clear();
                     m_NextId = 1;
-                    return true;
-                }
-                else
-                {
-                    Console.WriteLine("ERROR - 胜利者不在房间中");
-                    return false;
                 }
             }
-            public bool PlayerQuit(Socket cfd)
+            public void PlayerQuit(Socket cfd)
             {
                 if (m_Players.ContainsKey(cfd))
                 {
                     var quitPlayer = m_Players[cfd];
+                    quitPlayer.isQuit = true;
                     ServerNetManager.Send(quitPlayer.cfd, (Int16)ProtocType.CombatResult, new CombatResult
                     {
                         WinnerId = 0,
                     });
-                    m_Players.Remove(cfd);
-                    if(m_Players.Count <= 1)
+                    m_OnlineCount--;
+                    if(m_OnlineCount <= 1)
                     {
                         foreach (var pair in m_Players)
                         {
                             var player = pair.Value;
-                            ServerNetManager.Send(player.cfd, (Int16)ProtocType.CombatResult, new CombatResult
+                            if (player.id != quitPlayer.id)
                             {
-                                WinnerId = player.id,
-                            });
+                                player.isQuit = true;
+                                ServerNetManager.Send(player.cfd, (Int16)ProtocType.CombatResult, new CombatResult
+                                {
+                                    WinnerId = player.id,
+                                });
+                                m_OnlineCount--;
+                            }
                         }
                     }
-                    return true;
                 }
-                return false;
             }
 
             private Int32 m_NextId;
             private Dictionary<Socket, Player> m_Players = new Dictionary<Socket, Player>();
+            private Int32 m_OnlineCount = 0;
             public void AddPlayer(Socket cfd)
             {
                 if (m_Players.Count >= MAX_PLAYER) return;
@@ -232,6 +233,7 @@ namespace MainServer
                     id = m_NextId,
                 });
                 m_NextId++;
+                m_OnlineCount++;
             }
             public Int32 GetPlayerId(Socket cfd)
             {
@@ -282,11 +284,22 @@ namespace MainServer
                 // 广播帧包
                 foreach (var pair in m_Players)
                 {
-                    var cfd = pair.Key;
-                    ServerNetManager.Send(cfd, (Int16)ProtocType.FramePackage, frame);
+                    var player = pair.Value;
+                    if (!player.isQuit)
+                    {
+                        ServerNetManager.Send(player.cfd, (Int16)ProtocType.FramePackage, frame);
+                    }
                 }
                 // 清空缓存的命令
                 m_Commands.Clear();
+            }
+
+            public void ForEachPlayer(Action<Player> action)
+            {
+                foreach (var pair in m_Players)
+                {
+                    action?.Invoke(pair.Value);
+                }
             }
 
             public class Player
@@ -294,6 +307,7 @@ namespace MainServer
                 public Socket cfd;
                 public Int32 id;
                 public bool isReady;
+                public bool isQuit;
             }
 
             public class Command

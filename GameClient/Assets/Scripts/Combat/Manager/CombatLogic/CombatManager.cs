@@ -106,6 +106,11 @@ public partial class CombatManager : GameBaseManager<CombatManager>
         wnd.SetLogMessage(msg);
         wnd.onConfirm.AddListener(() =>
         {
+            foreach (var pair in m_States)
+            {
+                var state = pair.Value;
+                state.ReleaseResource();
+            }
             SceneManager.LoadScene((Int32)GameConst.SceneType.Player);
         });
         
@@ -166,7 +171,6 @@ public partial class CombatManager : GameBaseManager<CombatManager>
         Awake,      // 启动阶段
         Operation,  // 运营阶段
         Auction,    // 拍卖阶段
-        End,        // 结束阶段
     }
 
     public interface IState
