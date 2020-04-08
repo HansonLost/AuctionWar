@@ -92,12 +92,17 @@ public class MarketView : MonoBehaviour
     }
     private void InitMarket()
     {
+        var player = gameCenter.playerSet.GetSelfPlayer();
+
         // 商店
-        for (int i = 0; i < GameConst.COUNT_MARKET; i++)
+        for (int i = 0; i < m_PnlSell.Count; i++)
         {
+            var dataBlock = player.marketData.GetBlock(i);
             var block = m_PnlSell[i];
-            block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
-            block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
+            block.txtMatName.text = dataBlock.material.name;
+            block.txtPrice.text = player.marketData.GetBlockPrice(i).ToString();
+            //block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
+            //block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
             Int32 idx = i;
             block.btnBuy.onClick.AddListener(() =>
             {
@@ -110,8 +115,8 @@ public class MarketView : MonoBehaviour
         for (int i = 0; i < GameConst.COUNT_WHOLESALE; i++)
         {
             var block = m_PnlWholesale[i];
-            block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
-            block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
+            block.txtMatName.text = player.GetWholesale(i).material.name;
+            block.txtPrice.text = player.GetWholesale(i).price.ToString();
             Int32 idx = i;
             block.btnBuy.onClick.AddListener(() =>
             {
@@ -142,12 +147,16 @@ public class MarketView : MonoBehaviour
     private void RefreshMarket(Int32 playerId)
     {
         if (playerId != MatchSystem.instance.selfId) return;
+        var player = gameCenter.playerSet.GetSelfPlayer();
         for (int i = 0; i < m_PnlSell.Count; i++)
         {
+            var dataBlock = player.marketData.GetBlock(i);
             var block = m_PnlSell[i];
             block.btnBuy.interactable = true;
-            block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
-            block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
+            block.txtMatName.text = dataBlock.material.name;
+            block.txtPrice.text = player.marketData.GetBlockPrice(i).ToString();
+            //block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
+            //block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
         }
     }
     private void UpdateStorehouse(Int32 playerId)

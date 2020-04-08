@@ -9,4 +9,8 @@ public class Utility
     {
         return (value >= min && value <= max);
     }
+    public static bool CheckIndex(Int32 idx, ICollection collection)
+    {
+        return IsInRange(idx, 0, collection.Count - 1);
+    }
 }

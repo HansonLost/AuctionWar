@@ -5,6 +5,7 @@ using AuctionWar;
 using System;
 using Google.Protobuf;
 using HamPig.Network;
+using System.Text;
 
 // 处理帧包，并提供命令监听功能
 public class CombatFrameManager : GameBaseManager<CombatFrameManager>

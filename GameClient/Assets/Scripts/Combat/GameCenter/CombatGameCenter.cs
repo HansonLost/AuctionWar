@@ -9,7 +9,6 @@ public partial class CombatGameCenter
 {
     public PlayerSet playerSet { get; private set; } = new PlayerSet();
     public QuestMarket questMarket { get; private set; } = new QuestMarket();
-    public MaterialMarket materialMarket { get; private set; } = new MaterialMarket();
     public AuctionData auction { get; private set; } = new AuctionData();
 
     public struct Quest
@@ -133,6 +132,7 @@ public partial class CombatGameCenter
         public const Int32 maxQuest = 2;
         public Int32 id { get; private set; }
         public Int32 money { get; private set; }
+        public MaterialMarketData marketData { get; private set; } = new MaterialMarketData();
         public ProcessFactory processFactory { get; private set; } = new ProcessFactory();
         public Int32 storehouseCapacity { get; private set; } = GameConst.COUNT_STOREHOUSE_BEGIN;
 
@@ -419,74 +419,6 @@ public partial class CombatGameCenter
             HandOut,
             Finish,
         };
-    }
-
-    public class MaterialMarket
-    {
-        public const Int32 maxCountMarket = GameConst.COUNT_MARKET;
-        private List<Material> m_Materials = new List<Material>();
-        private List<StateType> m_MatStates = new List<StateType>();
-
-
-        /// <summary>
-        /// 买了第[0]个，花了[1]金币，材料为[3]
-        /// </summary>
-        public Action<Int32, Int32, Material> onBuyMaterial { get; set; }
-
-        public void RefreshMarket(Int32 playerId, Int32 seed)
-        {
-            // 原料市场是独立的，只刷新自己的市场
-            if (MatchSystem.instance.selfId != playerId) return;
-
-            Random random = new Random(seed);
-            m_Materials.Clear();
-            m_MatStates.Clear();
-            for (int i = 0; i < maxCountMarket; i++)
-            {
-                Material.Type type = (Material.Type)(random.Next() % (Int32)Material.Type.LastMaterial);
-                Int32 count = random.Next() % 10 + 1;   // 1 - 10
-                m_Materials.Add(new Material(type, count));
-                m_MatStates.Add(StateType.Sell);
-            }
-        }
-        public Material GetMaterial(Int32 idx)
-        {
-            return (IsValidIndex(idx) ? m_Materials[idx] : Material.empty);
-        }
-        public Int32 GetPrice(Material mat)
-        {
-            // 所有材料统一单价 1 金币
-            return mat.count * 1;
-        }
-        public Int32 GetPrice(Int32 idx)
-        {
-            return (IsValidIndex(idx) ? GetPrice(m_Materials[idx]) : 0);
-        }
-        public StateType GetState(Int32 idx)
-        {
-            return (IsValidIndex(idx) ? m_MatStates[idx] : StateType.None);
-        }
-        public Material BuyMaterial(Int32 idx)
-        {
-            if(IsValidIndex(idx)&& m_MatStates[idx] == StateType.Sell)
-            {
-                m_MatStates[idx] = StateType.SellOut;
-                var mat = m_Materials[idx];
-                if (onBuyMaterial != null)
-                    onBuyMaterial.Invoke(idx, GetPrice(mat), mat);
-                return mat;
-            }
-            return Material.empty;
-        }
-
-        private bool IsValidIndex(Int32 idx) { return (idx >= 0 && idx < m_Materials.Count); }
-
-        public enum StateType
-        {
-            Sell,       // 出售中
-            SellOut,    // 售空
-            None,
-        }
     }
 }
 

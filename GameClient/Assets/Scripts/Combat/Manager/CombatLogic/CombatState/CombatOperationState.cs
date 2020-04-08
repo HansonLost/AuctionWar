@@ -142,9 +142,7 @@ public partial class CombatManager
         {
             if (m_IsFreezen) return;
             Int32 selfId = MatchSystem.instance.selfId;
-            bool isValid = CanPlayerBuyMaterial(selfId, idx);
-
-            if (isValid)
+            CheckBuyMaterial(selfId, idx, (CombatGameCenter.Player player, Int32 blockIdx, Int32 price) =>
             {
                 CombatFrameManager.instance.SendCommand(
                     GameConst.CommandType.BuyMaterial,
@@ -153,7 +151,7 @@ public partial class CombatManager
                     {
                         Index = idx,
                     });
-            }
+            });
         }
         public void TryBuyWholesale(Int32 idx)
         {
@@ -215,16 +213,19 @@ public partial class CombatManager
         private void BuyMaterial(Int32 playerId, CmdBuyMaterial param)
         {
             Int32 matIdx = param.Index;
-            bool isValid = CanPlayerBuyMaterial(playerId, matIdx);
-            if (isValid)
+            var player = gameCenter.playerSet.GetSelfPlayer();
+            if (player == null) return;
+            var block = player.marketData.GetBlock(matIdx);
+            var price = player.marketData.GetBlockPrice(matIdx);
+            if (block == null) return;
+            if(player.money >= price && !block.isSaleout)
             {
-                var player = gameCenter.playerSet.GetPlayer(playerId);
-                var mat = gameCenter.materialMarket.BuyMaterial(matIdx);
-                var price = gameCenter.materialMarket.GetPrice(matIdx);
+                var mat = player.marketData.TakeAway(matIdx);
                 player.AddMaterial(mat);
                 player.SetMoney(player.money - price);
+
+                onBuyMaterial?.Invoke(playerId, param.Index);
             }
-            onBuyMaterial?.Invoke(playerId, param.Index);
         }
         private void BuyWholesale(Int32 playerId, CmdBuyWholesale param)
         {
@@ -278,7 +279,8 @@ public partial class CombatManager
                 return;
             }
             Int32 seed = MatchSystem.instance.random.Next();
-            gameCenter.materialMarket.RefreshMarket(playerId, seed);
+            player.marketData.Refresh(seed);
+            //gameCenter.materialMarket.RefreshMarket(playerId, seed);
             player.SetMoney(player.money - 10);
             onRefreshMarket?.Invoke(playerId);
         }
@@ -295,6 +297,20 @@ public partial class CombatManager
 
 
         // --- other --- //
+        private void CheckBuyMaterial(Int32 playerId, Int32 blockIdx, Action<CombatGameCenter.Player, Int32, Int32> action)
+        {
+            var player = gameCenter.playerSet.GetSelfPlayer();
+            if (player == null) return;
+            var block = player.marketData.GetBlock(blockIdx);
+            var price = player.marketData.GetBlockPrice(blockIdx);
+            if (block == null) return;
+            if (player.money >= price && 
+                !block.isSaleout &&
+                !player.IsFullStorehouse())
+            {
+                action.Invoke(player, blockIdx, price);
+            }
+        }
         private bool CanPlayerHandOutQuest(Int32 playerId, Int32 questIdx)
         {
             var player = gameCenter.playerSet.GetPlayer(playerId);
@@ -306,17 +322,6 @@ public partial class CombatManager
                 return false;
 
             return true;
-        }
-        private bool CanPlayerBuyMaterial(Int32 playerId, Int32 matId)
-        {
-            var player = gameCenter.playerSet.GetPlayer(playerId);
-            var price = gameCenter.materialMarket.GetPrice(matId);
-            var state = gameCenter.materialMarket.GetState(matId);
-            return (
-                player != null &&
-                !player.IsFullStorehouse() &&
-                state == CombatGameCenter.MaterialMarket.StateType.Sell &&
-                player.money >= price);
         }
         private void UpdateOperationTime(Int32 seq)
         {
@@ -387,10 +392,15 @@ public partial class CombatManager
             Int32 seed = MatchSystem.instance.random.Next();
             System.Random random = new System.Random(seed);
             gameCenter.questMarket.RefreshQuest(random.Next());
-            for (int playerId = 1; playerId <= MatchSystem.instance.playerCount; playerId++)
+            //for (int playerId = 1; playerId <= MatchSystem.instance.playerCount; playerId++)
+            //{
+                
+            //    gameCenter.materialMarket.RefreshMarket(playerId, random.Next());
+            //}
+            gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
             {
-                gameCenter.materialMarket.RefreshMarket(playerId, random.Next());
-            }
+                player.marketData.Refresh(random.Next());
+            });
 
             // 根据规则，每人每回合会获取投资金
             gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
