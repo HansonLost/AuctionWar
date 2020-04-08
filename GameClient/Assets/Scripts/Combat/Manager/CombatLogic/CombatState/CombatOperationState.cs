@@ -213,7 +213,7 @@ public partial class CombatManager
         private void BuyMaterial(Int32 playerId, CmdBuyMaterial param)
         {
             Int32 matIdx = param.Index;
-            var player = gameCenter.playerSet.GetSelfPlayer();
+            var player = gameCenter.playerSet.GetPlayer(playerId);
             if (player == null) return;
             var block = player.marketData.GetBlock(matIdx);
             var price = player.marketData.GetBlockPrice(matIdx);
@@ -280,7 +280,6 @@ public partial class CombatManager
             }
             Int32 seed = MatchSystem.instance.random.Next();
             player.marketData.Refresh(seed);
-            //gameCenter.materialMarket.RefreshMarket(playerId, seed);
             player.SetMoney(player.money - 10);
             onRefreshMarket?.Invoke(playerId);
         }
@@ -299,7 +298,7 @@ public partial class CombatManager
         // --- other --- //
         private void CheckBuyMaterial(Int32 playerId, Int32 blockIdx, Action<CombatGameCenter.Player, Int32, Int32> action)
         {
-            var player = gameCenter.playerSet.GetSelfPlayer();
+            var player = gameCenter.playerSet.GetPlayer(playerId);
             if (player == null) return;
             var block = player.marketData.GetBlock(blockIdx);
             var price = player.marketData.GetBlockPrice(blockIdx);
