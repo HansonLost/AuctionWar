@@ -53,6 +53,10 @@ public partial class CombatGameCenter
                 }
             }
         }
+        public void Clear()
+        {
+            m_Blocks.Clear();
+        }
         /// <summary>
         /// 向加工模块添加材料
         /// </summary>

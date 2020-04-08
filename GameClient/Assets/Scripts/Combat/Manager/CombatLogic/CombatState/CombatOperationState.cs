@@ -11,6 +11,7 @@ public partial class CombatManager
         private GameObject m_View;
 
         // 基本流程
+        private bool m_IsStart = false;
         private Int32 m_StartSeq;
         private readonly Int32 m_FreezenTime = 3;
         private bool m_IsFreezen;
@@ -44,6 +45,14 @@ public partial class CombatManager
         /// 操作事件 - 玩家出售材料。Int32 - 玩家ID
         /// </summary>
         public Action<Int32> onSellMaterial;
+        /// <summary>
+        /// 逻辑时间 - 开始运营阶段。
+        /// </summary>
+        public Action onAwake;
+        /// <summary>
+        /// 操作事件 - 玩家购买批发材料。Int32 - 购买者ID
+        /// </summary>
+        public Action<Int32> onBuyWholesale;
 
         // --- system --- //
         public void Reset(Int32 seq)
@@ -69,14 +78,52 @@ public partial class CombatManager
         }
         public StateType LogicUpdate(Int32 seq)
         {
+            Int32 seed = MatchSystem.instance.random.Next();
+            System.Random random = new System.Random(seed);
+
+            if (!m_IsStart)
+            {
+                m_IsStart = true;
+                onAwake?.Invoke();
+            }
             UpdateOperationTime(seq);
             UpdateProcessTime(seq);
-            return (m_CurrTime >= m_OpTime ? StateType.Auction : StateType.Operation);
+            if(m_CurrTime >= m_OpTime)
+            {
+                m_IsStart = false;
+                gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
+                {
+                    // 清理任务
+                    player.ClearQuest();
+                    player.processFactory.Clear();
+
+                    // 清理道具
+                    List<CombatProp> removeProp = new List<CombatProp>();
+                    player.ForEachProp((CombatProp prop) =>
+                    {
+                        var result = prop.OnEndOperation(random.Next());
+                        if (result.isRemove)
+                        {
+                            removeProp.Add(prop);
+                        }
+                    });
+                    foreach (var prop in removeProp)
+                    {
+                        player.RemoveProp(prop);
+                    }
+                });
+                return StateType.Auction;
+            }
+            else
+            {
+                return StateType.Operation;
+            }
         }
 
         private void BindCommand()
         {
             CmdBuyMaterialListener.instance.AddListener(this.BuyMaterial);
+            CmdBuyWholesaleListener.instance.AddListener(this.BuyWholesale);
             CmdPutInMaterialListener.instance.AddListener(this.PutInMaterial);
             CmdRefreshMarketListener.instance.AddListener(this.RefreshMarket);
             CmdSellMaterialListener.instance.AddListener(this.SellMaterial);
@@ -84,6 +131,7 @@ public partial class CombatManager
         private void RemoveCommand()
         {
             CmdBuyMaterialListener.instance.RemoveListener(this.BuyMaterial);
+            CmdBuyWholesaleListener.instance.RemoveListener(this.BuyWholesale);
             CmdPutInMaterialListener.instance.RemoveListener(this.PutInMaterial);
             CmdRefreshMarketListener.instance.RemoveListener(this.RefreshMarket);
             CmdSellMaterialListener.instance.RemoveListener(this.SellMaterial);
@@ -92,6 +140,7 @@ public partial class CombatManager
         // --- command --- //
         public void TryBuyMaterial(Int32 idx)
         {
+            if (m_IsFreezen) return;
             Int32 selfId = MatchSystem.instance.selfId;
             bool isValid = CanPlayerBuyMaterial(selfId, idx);
 
@@ -106,8 +155,28 @@ public partial class CombatManager
                     });
             }
         }
+        public void TryBuyWholesale(Int32 idx)
+        {
+            if (m_IsFreezen) return;
+            var player = gameCenter.playerSet.GetPlayer(MatchSystem.instance.selfId);
+            if (player == null) return;
+            var wholesale = player.GetWholesale(idx);
+            if (!wholesale.isSellout &&
+                wholesale.price <= player.money &&
+                !player.IsFullStorehouse())
+            {
+                CombatFrameManager.instance.SendCommand(
+                    GameConst.CommandType.BuyWholesale,
+                    MatchSystem.instance.selfId,
+                    new CmdBuyWholesale
+                    {
+                        Index = idx,
+                    });
+            }
+        }
         public void TryPutInMaterial(Int32 storehouseIdx, Int32 processBlockIdx)
         {
+            if (m_IsFreezen) return;
             CombatFrameManager.instance.SendCommand(
                 GameConst.CommandType.PutInMaterial,
                 MatchSystem.instance.selfId,
@@ -119,6 +188,7 @@ public partial class CombatManager
         }
         public void TryRefreshMarket()
         {
+            if (m_IsFreezen) return;
             CombatFrameManager.instance.SendCommand(
                 GameConst.CommandType.RefreshMarket,
                 MatchSystem.instance.selfId,
@@ -126,6 +196,7 @@ public partial class CombatManager
         }
         public void TrySellMaterial(Int32 storeIdx)
         {
+            if (m_IsFreezen) return;
             var player = gameCenter.playerSet.GetSelfPlayer();
             var store = player.GetStorehouse(storeIdx);
             if (!store.IsEmpty())
@@ -154,6 +225,22 @@ public partial class CombatManager
                 player.SetMoney(player.money - price);
             }
             onBuyMaterial?.Invoke(playerId, param.Index);
+        }
+        private void BuyWholesale(Int32 playerId, CmdBuyWholesale param)
+        {
+            Int32 idx = param.Index;
+            var player = gameCenter.playerSet.GetPlayer(playerId);
+            if (player == null) return;
+            var wholesale = player.GetWholesale(idx);
+            if (!wholesale.isSellout && 
+                wholesale.price <= player.money &&
+                !player.IsFullStorehouse())
+            {
+                player.BuyWholesale(idx);
+                player.AddMaterial(wholesale.material);
+                player.SetMoney(player.money - wholesale.price);
+            }
+            onBuyWholesale.Invoke(playerId);
         }
         private void HandOutQuest(Int32 playerId, CmdClaimQuest param)
         {
@@ -308,7 +395,12 @@ public partial class CombatManager
             // 根据规则，每人每回合会获取投资金
             gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
             {
+                player.ClearWholesaler();
                 player.SetMoney(player.money + 100);
+                player.ForEachProp((CombatProp prop) =>
+                {
+                    prop.OnBeginOperation(random.Next());
+                });
             });
         }
     }

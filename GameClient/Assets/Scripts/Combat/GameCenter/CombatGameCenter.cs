@@ -136,6 +136,8 @@ public partial class CombatGameCenter
         public ProcessFactory processFactory { get; private set; } = new ProcessFactory();
         public Int32 storehouseCapacity { get; private set; } = GameConst.COUNT_STOREHOUSE_BEGIN;
 
+        private List<CombatProp> m_PropBag = new List<CombatProp>();
+        private List<Wholesale> m_Wholesaler = new List<Wholesale>();
         private List<Quest> m_Quests = new List<Quest>();
         private List<Material> m_Storehouses = new List<Material>();
 
@@ -153,6 +155,7 @@ public partial class CombatGameCenter
         {
             onChangeMoney.Invoke(this.money);
         }
+        
         public void SetMoney(Int32 value)
         {
             money = value;
@@ -202,28 +205,7 @@ public partial class CombatGameCenter
                 m_Storehouses.Add(mat);
             }
         }
-        public Quest GetQuest(Int32 idx)
-        {
-            if (Utility.IsInRange(idx, 0, m_Quests.Count - 1))
-            {
-                return m_Quests[idx];
-            }
-            return Quest.empty;
-        }
-        public void AddQuest(Quest quest)
-        {
-            if (IsFullQuest()) return;
-            m_Quests.Add(quest);
-            processFactory.AddQuest(quest);
-            onAddQuest?.Invoke(quest);
-        }
-        public void RemoveQuest(Int32 idx)
-        {
-            if(Utility.IsInRange(idx, 0, m_Quests.Count - 1))
-            {
-                m_Quests.RemoveAt(idx);
-            }
-        }
+        
         public void AddMaterial(Material mat)
         {
             if (IsFullStorehouse()) return;
@@ -246,6 +228,114 @@ public partial class CombatGameCenter
             {
                 action.Invoke(mat);
             }
+        }
+
+        /* 需求操作 */
+        public void ClearQuest()
+        {
+            m_Quests.Clear();
+        }
+        public Quest GetQuest(Int32 idx)
+        {
+            if (Utility.IsInRange(idx, 0, m_Quests.Count - 1))
+            {
+                return m_Quests[idx];
+            }
+            return Quest.empty;
+        }
+        public void AddQuest(Quest quest)
+        {
+            if (IsFullQuest()) return;
+            m_Quests.Add(quest);
+            processFactory.AddQuest(quest);
+            onAddQuest?.Invoke(quest);
+        }
+        public void RemoveQuest(Int32 idx)
+        {
+            if (Utility.IsInRange(idx, 0, m_Quests.Count - 1))
+            {
+                m_Quests.RemoveAt(idx);
+            }
+        }
+
+        /* 批发商操作 */
+        public void ClearWholesaler()
+        {
+            m_Wholesaler.Clear();
+        }
+        public void AddWholesale(Material mat, Int32 price)
+        {
+            m_Wholesaler.Add(new Wholesale
+            {
+                material = mat,
+                price = price,
+                isSellout = false,
+            });
+        }
+        public Int32 WholesaleCount()
+        {
+            return m_Wholesaler.Count;
+        }
+        public bool IsFullWholesale()
+        {
+            return m_Wholesaler.Count >= GameConst.COUNT_WHOLESALE;
+        }
+        public Wholesale GetWholesale(Int32 index)
+        {
+            if(Utility.IsInRange(index, 0, m_Wholesaler.Count - 1))
+            {
+                return m_Wholesaler[index];
+            }
+            else
+            {
+                return new Wholesale
+                {
+                    material = Material.empty,
+                    price = 0,
+                    isSellout = true,
+                };
+            }
+        }
+        public void BuyWholesale(Int32 index)
+        {
+            var wholesale = GetWholesale(index);
+            if (!wholesale.isSellout)
+            {
+                wholesale.isSellout = true;
+                m_Wholesaler[index] = wholesale;
+            }
+        }
+        public void ForEachWholesaler(Action<Material, Int32, bool> action)
+        {
+            foreach (var wholesale in m_Wholesaler)
+            {
+                action.Invoke(wholesale.material, wholesale.price, wholesale.isSellout);
+            }
+        }
+
+        /* 道具背包操作 */
+        public void AddProp(CombatProp prop)
+        {
+            m_PropBag.Add(prop);
+        }
+        public void RemoveProp(CombatProp prop)
+        {
+            prop.OnDiscard();
+            m_PropBag.Remove(prop);
+        }
+        public void ForEachProp(Action<CombatProp> action)
+        {
+            foreach (var prop in m_PropBag)
+            {
+                action?.Invoke(prop);
+            }
+        }
+
+        public struct Wholesale
+        {
+            public Material material;
+            public Int32 price;
+            public bool isSellout;
         }
     }
 

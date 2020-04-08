@@ -50,7 +50,19 @@ public class CombatPropHelper
             upsetPrice = 30,
             script = typeof(PropStorehouse),
         },
+        new PropInfo
+        {
+            id = 3,
+            name = "批发商·木头",
+            upsetPrice = 10,
+            script = typeof(PropWoodShop),
+        }
     };
+}
+
+public struct PropEventResult
+{
+    public bool isRemove;
 }
 
 public abstract class CombatProp
@@ -78,10 +90,16 @@ public abstract class CombatProp
     public virtual void OnCollect(CombatGameCenter.Player player)
     {
         owner = player;
+        owner.AddProp(this);
     }
     public virtual void OnDiscard()
     {
         owner = null;
+    }
+    public virtual void OnBeginOperation(Int32 seed) { }
+    public virtual PropEventResult OnEndOperation(Int32 seed)
+    {
+        return new PropEventResult { isRemove = false };
     }
 }
 
@@ -109,6 +127,49 @@ public class PropStorehouse : CombatProp
     {
         owner.SetStorehouseCapacity(owner.storehouseCapacity - 1);
         base.OnDiscard();
+    }
+}
+
+public class PropWoodShop : CombatProp
+{
+    private Int32 m_ShopIndex = -1;
+
+    public PropWoodShop(PropInfo info) : base(info) { }
+
+    public override void OnBeginOperation(Int32 seed)
+    {
+        base.OnBeginOperation(seed);
+        if (owner.IsFullWholesale())
+        {
+            m_ShopIndex = -1;
+            return;
+        }
+        Random random = new Random(seed);
+        var mat = new CombatGameCenter.Material(CombatGameCenter.Material.Type.Wood, 10);
+        owner.AddWholesale(mat, 7);
+        m_ShopIndex = owner.WholesaleCount() - 1;
+    }
+    public override PropEventResult OnEndOperation(int seed)
+    {
+        base.OnEndOperation(seed);
+        bool isInvalid = false;
+        if (m_ShopIndex == -1)
+        {
+            isInvalid = true;
+        }
+        else
+        {
+            var shop = owner.GetWholesale(m_ShopIndex);
+            if (!shop.isSellout)
+            {
+                // 本回合没有交易则道具变成失效
+                isInvalid = true;
+            }
+        }
+        return new PropEventResult
+        {
+            isRemove = isInvalid,
+        };
     }
 }
 

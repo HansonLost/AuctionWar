@@ -86,3 +86,9 @@ public class CmdAuctionPassListener : BaseCmdListener<CmdAuctionPassListener, Cm
     public override GameConst.CommandType GetCommandType() => GameConst.CommandType.AuctionPass;
     public override MessageParser<CmdAuctionPass> GetParser() => CmdAuctionPass.Parser;
 }
+
+public class CmdBuyWholesaleListener : BaseCmdListener<CmdBuyWholesaleListener, CmdBuyWholesale>
+{
+    public override GameConst.CommandType GetCommandType() => GameConst.CommandType.BuyWholesale;
+    public override MessageParser<CmdBuyWholesale> GetParser() => CmdBuyWholesale.Parser;
+}

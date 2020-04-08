@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +8,7 @@ public class MarketView : MonoBehaviour
     public CombatGameCenter gameCenter { get{ return CombatManager.instance.gameCenter; } }
     private Button m_BtnRefresh;
     private List<SellBlock> m_PnlSell = new List<SellBlock>();
-    //private List<Storehouse> m_PnlStorehouses = new List<Storehouse>();
+    private List<SellBlock> m_PnlWholesale = new List<SellBlock>();
     private List<MarketStorehouseView> m_ViewStorehouses = new List<MarketStorehouseView>();
 
     private void Awake()
@@ -21,6 +20,7 @@ public class MarketView : MonoBehaviour
         BindEvent();
         InitMarket();
         InitStorehousePanel();
+        UpdateWholesaler(MatchSystem.instance.selfId);
     }
     private void OnDestroy()
     {
@@ -46,6 +46,16 @@ public class MarketView : MonoBehaviour
             block.btnBuy = root.Find(String.Format("{0}/BtnBuy", blockPath)).GetComponent<Button>();
             m_PnlSell.Add(block);
         }
+        // 批发面板
+        for (int i = 0; i < GameConst.COUNT_WHOLESALE; i++)
+        {
+            string blockPath = String.Format("Wholesaler/Sell ({0})", i + 1);
+            var block = new SellBlock();
+            block.txtMatName = root.Find(String.Format("{0}/Icon/Text", blockPath)).GetComponent<Text>();
+            block.txtPrice = root.Find(String.Format("{0}/Cost/Text", blockPath)).GetComponent<Text>();
+            block.btnBuy = root.Find(String.Format("{0}/BtnBuy", blockPath)).GetComponent<Button>();
+            m_PnlWholesale.Add(block);
+        }
         // 仓库面板
         for (int i = 1; i <= GameConst.COUNT_STOREHOUSE_MAX; i++)
         {
@@ -61,6 +71,7 @@ public class MarketView : MonoBehaviour
         player.onAddMaterial += this.AddMaterial;
 
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+        state.onBuyWholesale += this.UpdateWholesaler;
         state.onBuyMaterial += this.BuyMaterial;
         state.onRefreshMarket += this.RefreshMarket;
         state.onPutInMaterial += this.UpdateStorehouse;
@@ -74,12 +85,14 @@ public class MarketView : MonoBehaviour
 
         var state = CombatManager.instance.GetState<CombatManager.OperationState>();
         state.onBuyMaterial -= this.BuyMaterial;
+        state.onBuyWholesale -= this.UpdateWholesaler;
         state.onRefreshMarket -= this.RefreshMarket;
         state.onPutInMaterial -= this.UpdateStorehouse;
         state.onSellMaterial -= this.UpdateStorehouse;
     }
     private void InitMarket()
     {
+        // 商店
         for (int i = 0; i < GameConst.COUNT_MARKET; i++)
         {
             var block = m_PnlSell[i];
@@ -90,6 +103,20 @@ public class MarketView : MonoBehaviour
             {
                 var state = CombatManager.instance.GetState<CombatManager.OperationState>();
                 state.TryBuyMaterial(idx);
+            });
+        }
+
+        // 批发商
+        for (int i = 0; i < GameConst.COUNT_WHOLESALE; i++)
+        {
+            var block = m_PnlWholesale[i];
+            block.txtMatName.text = gameCenter.materialMarket.GetMaterial(i).name;
+            block.txtPrice.text = gameCenter.materialMarket.GetPrice(i).ToString();
+            Int32 idx = i;
+            block.btnBuy.onClick.AddListener(() =>
+            {
+                var state = CombatManager.instance.GetState<CombatManager.OperationState>();
+                state.TryBuyWholesale(idx);
             });
         }
     }
@@ -149,6 +176,29 @@ public class MarketView : MonoBehaviour
         {
             var view = m_ViewStorehouses[i];
             view.SetLock(true);
+        }
+    }
+    private void UpdateWholesaler(Int32 playerId)
+    {
+        var player = gameCenter.playerSet.GetPlayer(MatchSystem.instance.selfId);
+        Int32 idx = 0;
+        player.ForEachWholesaler((CombatGameCenter.Material mat, Int32 price, bool isSellout) =>
+        {
+            if(idx < m_PnlWholesale.Count)
+            {
+                m_PnlWholesale[idx].txtMatName.text = mat.name;
+                m_PnlWholesale[idx].txtPrice.text = price.ToString();
+                m_PnlWholesale[idx].btnBuy.interactable = !isSellout;
+            }
+            idx++;
+
+        });
+        while(idx < m_PnlWholesale.Count)
+        {
+            m_PnlWholesale[idx].txtMatName.text = "暂无";
+            m_PnlWholesale[idx].txtPrice.text = "???";
+            m_PnlWholesale[idx].btnBuy.interactable = false;
+            idx++;
         }
     }
 
