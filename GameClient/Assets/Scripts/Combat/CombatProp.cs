@@ -56,7 +56,28 @@ public class CombatPropHelper
             name = "批发商·木头",
             upsetPrice = 10,
             script = typeof(PropWoodShop),
-        }
+        },
+        new PropInfo
+        {
+            id = 3,
+            name = "批发商·石头",
+            upsetPrice = 10,
+            script = typeof(PropStoneShop),
+        },
+        new PropInfo
+        {
+            id = 3,
+            name = "批发商·钢铁",
+            upsetPrice = 10,
+            script = typeof(PropIronShop),
+        },
+        new PropInfo
+        {
+            id = 3,
+            name = "批发商·燃料",
+            upsetPrice = 10,
+            script = typeof(PropFuelShop),
+        },
     };
 }
 
@@ -130,13 +151,14 @@ public class PropStorehouse : CombatProp
     }
 }
 
-public class PropWoodShop : CombatProp
+public abstract class PropMaterialShop : CombatProp
 {
     private Int32 m_ShopIndex = -1;
+    public PropMaterialShop(PropInfo info) : base(info) { }
 
-    public PropWoodShop(PropInfo info) : base(info) { }
+    protected abstract CombatGameCenter.Material.Type GetMaterialType();
 
-    public override void OnBeginOperation(Int32 seed)
+    public override void OnBeginOperation(int seed)
     {
         base.OnBeginOperation(seed);
         if (owner.IsFullWholesale())
@@ -145,7 +167,8 @@ public class PropWoodShop : CombatProp
             return;
         }
         Random random = new Random(seed);
-        var mat = new CombatGameCenter.Material(CombatGameCenter.Material.Type.Wood, 10);
+        var matType = GetMaterialType();
+        var mat = new CombatGameCenter.Material(matType, 10);
         owner.AddWholesale(mat, 7);
         m_ShopIndex = owner.WholesaleCount() - 1;
     }
@@ -172,6 +195,71 @@ public class PropWoodShop : CombatProp
         };
     }
 }
+
+//public class PropWoodShop : CombatProp
+//{
+//    private Int32 m_ShopIndex = -1;
+
+//    public PropWoodShop(PropInfo info) : base(info) { }
+
+//    public override void OnBeginOperation(Int32 seed)
+//    {
+//        base.OnBeginOperation(seed);
+//        if (owner.IsFullWholesale())
+//        {
+//            m_ShopIndex = -1;
+//            return;
+//        }
+//        Random random = new Random(seed);
+//        var mat = new CombatGameCenter.Material(CombatGameCenter.Material.Type.Wood, 10);
+//        owner.AddWholesale(mat, 7);
+//        m_ShopIndex = owner.WholesaleCount() - 1;
+//    }
+//    public override PropEventResult OnEndOperation(int seed)
+//    {
+//        base.OnEndOperation(seed);
+//        bool isInvalid = false;
+//        if (m_ShopIndex == -1)
+//        {
+//            isInvalid = true;
+//        }
+//        else
+//        {
+//            var shop = owner.GetWholesale(m_ShopIndex);
+//            if (!shop.isSellout)
+//            {
+//                // 本回合没有交易则道具变成失效
+//                isInvalid = true;
+//            }
+//        }
+//        return new PropEventResult
+//        {
+//            isRemove = isInvalid,
+//        };
+//    }
+//}
+
+public class PropWoodShop : PropMaterialShop
+{
+    public PropWoodShop(PropInfo info) : base(info) { }
+    protected override CombatGameCenter.Material.Type GetMaterialType() => CombatGameCenter.Material.Type.Wood;
+}
+public class PropIronShop : PropMaterialShop
+{
+    public PropIronShop(PropInfo info) : base(info) { }
+    protected override CombatGameCenter.Material.Type GetMaterialType() => CombatGameCenter.Material.Type.Iron;
+}
+public class PropStoneShop : PropMaterialShop
+{
+    public PropStoneShop(PropInfo info) : base(info) { }
+    protected override CombatGameCenter.Material.Type GetMaterialType() => CombatGameCenter.Material.Type.Stone;
+}
+public class PropFuelShop : PropMaterialShop
+{
+    public PropFuelShop(PropInfo info) : base(info) { }
+    protected override CombatGameCenter.Material.Type GetMaterialType() => CombatGameCenter.Material.Type.Fuel;
+}
+
 
 public enum CombatPropType
 {
