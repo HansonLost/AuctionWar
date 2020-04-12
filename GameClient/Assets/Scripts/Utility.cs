@@ -13,4 +13,12 @@ public class Utility
     {
         return IsInRange(idx, 0, collection.Count - 1);
     }
+    public static void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 }

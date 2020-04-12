@@ -196,7 +196,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 0}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -604,11 +604,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Storehouse (6)
-      objectReference: {fileID: 0}
-    - target: {fileID: 1185282543989683795, guid: 45903b50d965e5f4ba5e2385e4c3e396,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4894404852539519267, guid: 45903b50d965e5f4ba5e2385e4c3e396,
         type: 3}
@@ -1109,11 +1104,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Storehouse (5)
-      objectReference: {fileID: 0}
-    - target: {fileID: 1185282543989683795, guid: 45903b50d965e5f4ba5e2385e4c3e396,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4894404852539519267, guid: 45903b50d965e5f4ba5e2385e4c3e396,
         type: 3}
