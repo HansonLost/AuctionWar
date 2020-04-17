@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class MarketView : MonoBehaviour
 {
-    public Text targetMoney;
-
     public CombatGameCenter gameCenter { get{ return CombatManager.instance.gameCenter; } }
     private Button m_BtnRefresh;
     private List<SellBlock> m_PnlSell = new List<SellBlock>();
@@ -226,15 +224,5 @@ public class MarketView : MonoBehaviour
     {
         public Text txtMatName;
         public Text txtMatCount;
-    }
-
-    private void Update()
-    {
-        StringBuilder builder = new StringBuilder();
-        gameCenter.playerSet.ForEachPlayer((CombatGameCenter.Player player) =>
-        {
-            builder.AppendFormat("player{0} = {1}\n", player.id, player.money);
-        });
-        targetMoney.text = builder.ToString();
     }
 }

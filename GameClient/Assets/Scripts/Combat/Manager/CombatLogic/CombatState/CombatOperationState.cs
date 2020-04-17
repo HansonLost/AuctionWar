@@ -241,7 +241,7 @@ public partial class CombatManager
                 player.AddMaterial(wholesale.material);
                 player.SetMoney(player.money - wholesale.price);
             }
-            onBuyWholesale.Invoke(playerId);
+            onBuyWholesale?.Invoke(playerId);
         }
         private void HandOutQuest(Int32 playerId, CmdClaimQuest param)
         {

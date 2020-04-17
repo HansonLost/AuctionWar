@@ -59,21 +59,21 @@ public class CombatPropHelper
         },
         new PropInfo
         {
-            id = 3,
+            id = 4,
             name = "批发商·石头",
             upsetPrice = 10,
             script = typeof(PropStoneShop),
         },
         new PropInfo
         {
-            id = 3,
+            id = 5,
             name = "批发商·钢铁",
             upsetPrice = 10,
             script = typeof(PropIronShop),
         },
         new PropInfo
         {
-            id = 3,
+            id = 6,
             name = "批发商·燃料",
             upsetPrice = 10,
             script = typeof(PropFuelShop),
